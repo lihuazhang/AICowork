@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { SettingsNavigation } from './SettingsNavigation';
 import { SettingsContent } from './SettingsContent';
+import { IS_MAC } from '@/ui/utils/device';
 
 export function SettingsPage() {
   const { setCurrentPage, settingsSection, setSettingsSection } = useAppStore();
@@ -16,7 +17,7 @@ export function SettingsPage() {
       <header className="fixed top-0 left-0 right-0 z-10 h-12 bg-surface border-b border-ink-900/10 flex items-center px-4">
         <button
           onClick={() => setCurrentPage('main')}
-          className="p-2 rounded-lg hover:bg-surface-tertiary transition-colors duration-200 cursor-pointer"
+          className={`p-2 rounded-lg hover:bg-surface-tertiary transition-colors duration-200 cursor-pointer ${IS_MAC ? 'ml-20' : ''}`}
           aria-label="返回"
         >
           <ArrowLeft className="w-5 h-5" strokeWidth={2} />
