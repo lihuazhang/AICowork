@@ -1,0 +1,1 @@
+export const IS_MAC = /Macintosh|Mac OS X/.test(navigator.userAgent);
