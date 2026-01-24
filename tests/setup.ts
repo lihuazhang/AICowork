@@ -1,9 +1,4 @@
 /**
- * @author      Alan
- * @copyright   AGCPA v3.0
- * @created     2026-01-21
- * @Email       None
- *
  * Vitest 测试环境设置
  * Mock Electron 和其他外部依赖
  */

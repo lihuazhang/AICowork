@@ -182,7 +182,23 @@ function App() {
   const onEvent = useCallback((event: ServerEvent) => {
     handleServerEvent(event);
     handlePartialMessages(event);
-  }, [handleServerEvent, handlePartialMessages]);
+
+    // 同步会话状态到状态栏
+    if (event.type === "session.status" && event.payload.sessionId === activeSessionId) {
+      const { status } = event.payload;
+      if (status === "running") {
+        // 会话开始运行
+        if (!responseStartTime) {
+          setResponseStartTime(Date.now());
+        }
+      } else if (status === "completed" || status === "error" || status === "idle") {
+        // 会话结束，重置状态
+        setSessionStatus('idle');
+        setResponseStartTime(null);
+        setShowTimeoutWarning(false);
+      }
+    }
+  }, [handleServerEvent, handlePartialMessages, activeSessionId, responseStartTime, setSessionStatus, setResponseStartTime, setShowTimeoutWarning]);
 
   const { connected, sendEvent } = useIPC(onEvent);
   const { handleStartFromModal } = usePromptActions(sendEvent);

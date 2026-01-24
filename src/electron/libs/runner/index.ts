@@ -4,27 +4,21 @@
  */
 
 import { query, type SDKMessage } from "@anthropic-ai/claude-agent-sdk";
-import type { ServerEvent } from "../../types.js";
 import type { RunnerOptions, RunnerHandle, MemoryConfig } from "./types.js";
-import type { Session } from "../../storage/session-store.js";
-import type { SdkNativeConfig } from "../../utils/sdk-native-loader.js";
 
 import {
-  getCurrentApiConfig,
   buildEnvForConfig,
-  buildEnvForConfigWithProxy,
-  checkProxyNeeded,
   getClaudeCodePath
 } from "../../services/claude-settings.js";
+import { getCachedApiConfig } from "../../managers/sdk-config-cache.js";
 import { getEnhancedEnv } from "../../utils/util.js";
 import { addLanguagePreference } from "../../utils/language-detector.js";
-import { transformSlashCommand } from "../../services/slash-commands.js";
 import { getMemoryToolConfig } from "../../utils/memory-tools.js";
-import { getCachedSdkNativeConfig } from "../../managers/sdk-config-cache.js";
 
 import { PerformanceMonitor } from "./performance-monitor.js";
-import { getMemoryGuidancePrompt, triggerAutoMemoryAnalysis } from "./memory-manager.js";
+import { triggerAutoMemoryAnalysis, clearMemoryGuidanceCache } from "./memory-manager.js";
 import { createPermissionHandler, handleToolUseEvent } from "./permission-handler.js";
+import { clearMcpServerCache } from "../../managers/mcp-server-manager.js";
 
 const DEFAULT_CWD = process.cwd();
 
@@ -36,18 +30,16 @@ const DEFAULT_CWD = process.cwd();
  */
 export function clearRunnerCache(): void {
   // 使用 MCP 服务器管理器清除缓存
-  const { clearMcpServerCache } = require("../mcp-server-manager.js");
   clearMcpServerCache();
 
   // 清除记忆提示缓存
-  const { clearMemoryGuidanceCache } = require("./memory-manager.js");
   clearMemoryGuidanceCache();
 }
 
 // 重新导出类型
 export type { RunnerOptions, RunnerHandle, MemoryConfig } from "./types.js";
 export { PerformanceMonitor } from "./performance-monitor.js";
-export { triggerAutoMemoryAnalysis, getMemoryGuidancePrompt } from "./memory-manager.js";
+export { triggerAutoMemoryAnalysis } from "./memory-manager.js";
 
 /**
  * 执行 Claude SDK 会话
@@ -62,6 +54,10 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
   // 开始性能监控
   const perfMonitor = new PerformanceMonitor();
   perfMonitor.start();
+
+  // 在函数开始就导入 logger，确保日志可用
+  const { log } = await import("../../logger.js");
+  log.info(`[Runner] Starting Claude query for session ${session.id}`, { promptLength: prompt.length });
 
   const sendMessage = (message: SDKMessage) => {
     onEvent({
@@ -80,34 +76,32 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
   // Start the query in the background
   (async () => {
     try {
-      // 1. 获取并验证 API 配置
-      const config = getCurrentApiConfig();
+      // 1. 获取并验证 API 配置（使用预加载的缓存）
+      log.debug(`[Runner] Fetching API config...`);
+      const config = await getCachedApiConfig();
 
       if (!config) {
+        log.error(`[Runner] No API config found for session ${session.id}`);
         onEvent({
           type: "session.status",
           payload: { sessionId: session.id, status: "error", title: session.title, cwd: session.cwd, error: "API configuration not found. Please configure API settings." }
         });
         return;
       }
+      log.info(`[Runner] API config loaded`, { baseURL: config.baseURL, model: config.model });
 
-      // 2. 检测代理需求并构建环境变量
-      perfMonitor.mark('Proxy Detection');
-      const needsProxy = await checkProxyNeeded(config);
-      const env = needsProxy
-        ? buildEnvForConfigWithProxy(config)
-        : buildEnvForConfig(config);
-      perfMonitor.measure('Proxy Detection');
-
+      // 2. 构建环境变量（直连模式）
+      perfMonitor.mark('Environment Setup');
+      const env = buildEnvForConfig(config);
       const mergedEnv = {
         ...getEnhancedEnv(),
         ...env
       };
+      perfMonitor.measure('Environment Setup');
 
-      // 3. 处理提示词转换（语言偏好 + 斜杠命令）
+      // 3. 处理提示词（添加语言偏好，斜杠命令由 SDK 直接处理）
       const enhancedPrompt = addLanguagePreference(prompt);
       const languageHint = enhancedPrompt !== prompt ? enhancedPrompt.split('\n\n')[0] : undefined;
-      const transformedPrompt = transformSlashCommand(prompt);
 
       // 4. 获取记忆配置并发送初始状态
       const memConfig = getMemoryToolConfig() as MemoryConfig & { autoStore: boolean };
@@ -122,42 +116,38 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
         });
       }
 
-      // 5. 加载 SDK 原生配置（使用缓存）
-      perfMonitor.mark('SDK Config Loading');
-      const { log } = await import("../../logger.js");
-      const sdkNativeConfig: SdkNativeConfig = await getCachedSdkNativeConfig();
-      log.info(`[Runner] SDK native config loaded: plugins=${sdkNativeConfig.plugins?.length || 0}, agents=${Object.keys(sdkNativeConfig.agents || {}).length}`);
-      perfMonitor.measure('SDK Config Loading');
+      // 5. 获取 Memory MCP 服务器（自定义的，不在 settings.json 中）
+      perfMonitor.mark('Memory MCP Server Loading');
+      const { getCachedMemoryMcpServer } = await import("../../managers/sdk-config-cache.js");
+      let memoryMcpServer: any = null;
+      if (memConfig.enabled) {
+        memoryMcpServer = await getCachedMemoryMcpServer();
+        if (memoryMcpServer) {
+          log.debug(`[Runner] Memory MCP server loaded from cache`);
+        }
+      }
+      perfMonitor.measure('Memory MCP Server Loading');
 
-      // 6. 获取 MCP 服务器（使用管理器实例池）
-      perfMonitor.mark('MCP Server Acquisition');
-      const { getMcpServerManager } = await import("../../managers/mcp-server-manager.js");
-      const mcpManager = getMcpServerManager();
-      const mcpServers = await mcpManager.acquireServers();
-      perfMonitor.measure('MCP Server Acquisition');
+      // 6. 获取语言提示（轻量级，只包含语言偏好）
+      const languagePrompt = languageHint;
 
-      // 7. 构建记忆指南系统提示（使用缓存）
-      const memoryGuidancePrompt = memConfig.enabled ? getMemoryGuidancePrompt() : undefined;
-
-      // 8. 合并系统提示（语言提示 + 记忆指南）
-      const combinedSystemPrompt = memoryGuidancePrompt
-        ? `${memoryGuidancePrompt}\n${languageHint || ''}`.trim()
-        : languageHint;
-
-      // 9. 确定权限模式（使用更严格的默认值）
-      const hasExplicitPermissions = (sdkNativeConfig.allowedTools && sdkNativeConfig.allowedTools.length > 0) ||
-                                     (sdkNativeConfig.disallowedTools && sdkNativeConfig.disallowedTools.length > 0);
+      // 7. 确定权限模式（使用最严格的默认值）
       const permissionMode: 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan' | 'delegate' | 'dontAsk' =
         "default";  // 使用最严格的默认模式，防止权限绕过
 
-      log.info(`[Runner] Permission mode: ${permissionMode}, hasExplicitPermissions: ${hasExplicitPermissions}`);
+      log.debug(`[Runner] Permission mode: ${permissionMode}`);
 
-      // 10. 记录会话启动完成
+      // 8. 记录会话启动完成
       perfMonitor.measureTotal();
 
-      // 11. 创建并执行查询
+      // 9. 创建并执行查询
+      log.info(`[Runner] Starting SDK query for session ${session.id}`);
+
+      // ⚡ 渐进式加载优化：不自动注入记忆上下文
+      // AI 可以通过 Memory MCP 工具主动检索记忆
+      // 记忆工具会自动出现在工具列表中，AI 可以自然发现并使用
       const q = query({
-        prompt: transformedPrompt,
+        prompt: prompt,  // SDK 直接处理斜杠命令
         options: {
           cwd: session.cwd ?? DEFAULT_CWD,
           resume: resumeSessionId,
@@ -166,28 +156,27 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
           pathToClaudeCodeExecutable: getClaudeCodePath(),
           permissionMode,
           includePartialMessages: true,
-          // 系统提示
-          ...(combinedSystemPrompt ? { extraArgs: { 'append-system-prompt': combinedSystemPrompt } } : {}),
-          // MCP 服务器
-          ...(Object.keys(mcpServers).length > 0 ? { mcpServers } : {}),
-          // SDK 原生配置
-          ...(sdkNativeConfig.plugins && sdkNativeConfig.plugins.length > 0 ? { plugins: sdkNativeConfig.plugins } : {}),
-          ...(sdkNativeConfig.agents && Object.keys(sdkNativeConfig.agents).length > 0 ? { agents: sdkNativeConfig.agents } : {}),
-          ...(sdkNativeConfig.agent ? { agent: sdkNativeConfig.agent } : {}),
-          ...(sdkNativeConfig.allowedTools && sdkNativeConfig.allowedTools.length > 0 ? { allowedTools: sdkNativeConfig.allowedTools } : {}),
-          ...(sdkNativeConfig.disallowedTools && sdkNativeConfig.disallowedTools.length > 0 ? { disallowedTools: sdkNativeConfig.disallowedTools } : {}),
-          ...(sdkNativeConfig.hooks && Object.keys(sdkNativeConfig.hooks).length > 0 ? { hooks: sdkNativeConfig.hooks } : {}),
-          ...(sdkNativeConfig.maxTurns ? { maxTurns: sdkNativeConfig.maxTurns } : {}),
-          ...(sdkNativeConfig.maxBudgetUsd ? { maxBudgetUsd: sdkNativeConfig.maxBudgetUsd } : {}),
-          ...(sdkNativeConfig.persistSession !== undefined ? { persistSession: sdkNativeConfig.persistSession } : {}),
-          ...(sdkNativeConfig.enableFileCheckpointing !== undefined ? { enableFileCheckpointing: sdkNativeConfig.enableFileCheckpointing } : {}),
+          // ⭐ 设置 settingSources 让 SDK 自动加载 ~/.claude/settings.json
+          // SDK 将自动处理：enabledPlugins, mcpServers, agents, permissions, hooks 等
+          // 这样就不需要手动扫描和转换配置了
+          settingSources: ['user'],
+          // 系统提示（只包含语言偏好，轻量级）
+          ...(languagePrompt ? { extraArgs: { 'append-system-prompt': languagePrompt } } : {}),
+          // Memory MCP 服务器（自定义的，需要显式传递，因为不在 settings.json 中）
+          ...(memoryMcpServer ? { mcpServers: { 'memory-tools': memoryMcpServer } as any } : {}),
           // 权限处理
           canUseTool: createPermissionHandler(session, sendPermissionRequest)
         }
       });
 
       // 12. 处理消息流
+      log.debug(`[Runner] Starting message loop for session ${session.id}`);
+      let messageCount = 0;
       for await (const message of q) {
+        messageCount++;
+        if (messageCount === 1 || messageCount % 10 === 0) {
+          log.debug(`[Runner] Received message ${messageCount} of type: ${message.type}`);
+        }
         // 提取 session_id
         if (message.type === "system" && "subtype" in message && message.subtype === "init") {
           const sdkSessionId = message.session_id;
@@ -222,10 +211,14 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
         }
       }
 
-      // 13. 查询正常完成 - 触发自动记忆分析
+      // 13. 查询正常完成 - 触发自动记忆分析（异步执行，不阻塞会话完成）
+      log.info(`[Runner] Message loop completed for session ${session.id}, total messages: ${messageCount}`);
       if (session.status === "running") {
         if (memConfig.enabled && memConfig.autoStore) {
-          await triggerAutoMemoryAnalysis(session, transformedPrompt, memConfig, onEvent);
+          // 异步执行记忆分析，不等待完成
+          triggerAutoMemoryAnalysis(session, prompt, memConfig, onEvent).catch((error) => {
+            log.error('[Auto Memory] Background analysis failed:', error);
+          });
         }
 
         onEvent({
@@ -234,10 +227,14 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
         });
       }
     } catch (error) {
-      if ((error as Error).name === "AbortError") {
+      const errorName = (error as Error).name;
+      const errorMessage = (error as Error).message;
+      if (errorName === "AbortError") {
         // 会话被中止，不视为错误
+        log.info(`[Runner] Session ${session.id} aborted by user`);
         return;
       }
+      log.error(`[Runner] Error in session ${session.id}:`, error);
       onEvent({
         type: "session.status",
         payload: { sessionId: session.id, status: "error", title: session.title, error: String(error) }

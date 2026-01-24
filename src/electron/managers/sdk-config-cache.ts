@@ -1,6 +1,9 @@
 /**
  * SDK 配置缓存管理模块
  * 实现配置预加载、缓存和增量更新，优化启动性能
+ * @author Alan
+ * @copyright AGCPA v3.0
+ * @updated 2025-01-24 (添加 API 配置缓存)
  */
 
 import { watch, FSWatcher } from 'fs';
@@ -10,6 +13,7 @@ import { app } from 'electron';
 import { log } from '../logger.js';
 import { loadSdkNativeConfig, type SdkNativeConfig } from '../utils/sdk-native-loader.js';
 import { loadMcpServers, type McpServerConfig } from '../storage/mcp-store.js';
+import { loadApiConfig, type ApiConfig } from '../storage/config-store.js';
 
 /**
  * 缓存的配置数据
@@ -19,6 +23,10 @@ export interface CachedConfig {
   sdkNative: SdkNativeConfig;
   /** MCP 服务器配置 */
   mcpServers: Record<string, McpServerConfig>;
+  /** Memory MCP 服务器（缓存，避免每次重新创建）*/
+  memoryMcpServer?: any;
+  /** API 配置 */
+  apiConfig: ApiConfig | null;
   /** 缓存时间戳 */
   timestamp: number;
 }
@@ -27,7 +35,7 @@ export interface CachedConfig {
  * 配置变更事件类型
  */
 export type ConfigChangeEvent = {
-  type: 'sdk-native' | 'mcp-servers' | 'all';
+  type: 'sdk-native' | 'mcp-servers' | 'api-config' | 'all';
   timestamp: number;
 };
 
@@ -92,16 +100,24 @@ class SdkConfigCacheManager {
     const startTime = Date.now();
 
     try {
-      // 并行加载所有配置
-      const [sdkNative, mcpServers] = await Promise.all([
+      // 并行加载所有配置（API 配置是同步的，包装为 Promise）
+      const [sdkNative, mcpServers, apiConfig] = await Promise.all([
         loadSdkNativeConfig(),
         loadMcpServers(),
+        Promise.resolve().then(() => {
+          try {
+            return loadApiConfig();
+          } catch {
+            return null;
+          }
+        }),
       ]);
 
       // 更新缓存
       this.cache = {
         sdkNative,
         mcpServers,
+        apiConfig,
         timestamp: Date.now(),
       };
 
@@ -110,6 +126,7 @@ class SdkConfigCacheManager {
         plugins: sdkNative.plugins?.length || 0,
         agents: Object.keys(sdkNative.agents || {}).length,
         mcpServers: Object.keys(mcpServers).length,
+        apiConfigured: !!apiConfig,
       });
     } catch (error) {
       log.error('[Config Cache] ✗ Failed to preload config:', error);
@@ -117,6 +134,7 @@ class SdkConfigCacheManager {
       this.cache = {
         sdkNative: {},
         mcpServers: {},
+        apiConfig: null,
         timestamp: Date.now(),
       };
     }
@@ -130,6 +148,7 @@ class SdkConfigCacheManager {
     const settingsPath = join(homedir(), '.claude', 'settings.json');
     const pluginsDir = join(homedir(), '.claude', 'plugins');
     const agentsDir = join(app.getPath('userData'), 'agents');
+    const apiConfigPath = join(app.getPath('userData'), 'api-config.json');
 
     // 监听 settings.json（包含 MCP 服务器、权限、钩子等配置）
     try {
@@ -143,6 +162,20 @@ class SdkConfigCacheManager {
       log.info(`[Config Cache] ✓ Watching settings.json`);
     } catch (error) {
       log.warn('[Config Cache] ✗ Failed to watch settings.json:', error);
+    }
+
+    // 监听 api-config.json（API 配置文件）
+    try {
+      const apiConfigWatcher = watch(apiConfigPath, { persistent: false }, (eventType, filename) => {
+        if (eventType === 'change') {
+          log.info(`[Config Cache] api-config.json changed`);
+          this.handleConfigChange('api-config');
+        }
+      });
+      this.watchers.push(apiConfigWatcher);
+      log.info(`[Config Cache] ✓ Watching api-config.json`);
+    } catch (error) {
+      log.warn('[Config Cache] ✗ Failed to watch api-config.json:', error);
     }
 
     // 监听 plugins 目录
@@ -200,6 +233,9 @@ class SdkConfigCacheManager {
         } else if (type === 'mcp-servers') {
           // 增量更新 MCP 服务器配置
           await this.incrementalUpdateMcpServers();
+        } else if (type === 'api-config') {
+          // 增量更新 API 配置
+          await this.incrementalUpdateApiConfig();
         }
 
         // 通知监听器
@@ -271,6 +307,35 @@ class SdkConfigCacheManager {
   }
 
   /**
+   * 增量更新 API 配置
+   */
+  private async incrementalUpdateApiConfig(): Promise<void> {
+    if (!this.cache) {
+      return;
+    }
+
+    const startTime = Date.now();
+
+    try {
+      // 只更新 API 配置
+      const apiConfig = loadApiConfig();
+
+      // 合并到缓存
+      this.cache.apiConfig = apiConfig;
+      this.cache.timestamp = Date.now();
+
+      const duration = Date.now() - startTime;
+      log.info(`[Config Cache] ✓ API config incremental updated (${duration}ms)`, {
+        configured: !!apiConfig,
+        baseURL: apiConfig?.baseURL,
+        model: apiConfig?.model,
+      });
+    } catch (error) {
+      log.error('[Config Cache] ✗ Failed to incremental update API config:', error);
+    }
+  }
+
+  /**
    * 通知所有监听器
    */
   private notifyListeners(event: ConfigChangeEvent): void {
@@ -310,6 +375,50 @@ class SdkConfigCacheManager {
   async getMcpServers(): Promise<Record<string, McpServerConfig>> {
     const config = await this.getConfig();
     return config.mcpServers;
+  }
+
+  /**
+   * 获取缓存的 API 配置
+   */
+  async getApiConfig(): Promise<ApiConfig | null> {
+    const config = await this.getConfig();
+    return config.apiConfig;
+  }
+
+  /**
+   * 获取或创建 Memory MCP 服务器（带缓存）
+   */
+  async getMemoryMcpServer(): Promise<any> {
+    const config = await this.getConfig();
+
+    // 如果已经缓存，直接返回
+    if (config.memoryMcpServer) {
+      return config.memoryMcpServer;
+    }
+
+    // 检查记忆功能是否启用
+    const { getMemoryToolConfig } = await import('../utils/memory-tools.js');
+    const memConfig = getMemoryToolConfig();
+
+    if (!memConfig.enabled) {
+      return null;
+    }
+
+    // 创建 Memory MCP 服务器并缓存
+    try {
+      const { createMemoryMcpServer } = await import('../utils/memory-mcp-server.js');
+      const memoryServer = await createMemoryMcpServer();
+
+      // 更新缓存
+      this.cache!.memoryMcpServer = memoryServer;
+      this.cache!.timestamp = Date.now();
+
+      log.info('[Config Cache] Memory MCP server created and cached');
+      return memoryServer;
+    } catch (error) {
+      log.error('[Config Cache] Failed to create Memory MCP server:', error);
+      return null;
+    }
   }
 
   /**
@@ -429,6 +538,24 @@ export async function getCachedSdkNativeConfig(): Promise<SdkNativeConfig> {
 export async function getCachedMcpServers(): Promise<Record<string, McpServerConfig>> {
   const manager = getConfigCacheManager();
   return await manager.getMcpServers();
+}
+
+/**
+ * 获取缓存的 API 配置
+ * 替代原来的 getCurrentApiConfig()，提供预加载和热更新能力
+ */
+export async function getCachedApiConfig(): Promise<ApiConfig | null> {
+  const manager = getConfigCacheManager();
+  return await manager.getApiConfig();
+}
+
+/**
+ * 获取缓存的 Memory MCP 服务器
+ * 只创建一次并缓存，避免每次会话重新创建
+ */
+export async function getCachedMemoryMcpServer(): Promise<any> {
+  const manager = getConfigCacheManager();
+  return await manager.getMemoryMcpServer();
 }
 
 /**

@@ -206,8 +206,6 @@ export interface ElectronAPI {
   openExternal: (url: string) => Promise<{ success: boolean; error?: string }>;
   /** 重命名会话 */
   renameSession: (sessionId: string, newTitle: string) => Promise<{ success: boolean; error?: string }>;
-  /** 获取可用的斜杠命令和技能列表 */
-  getSlashCommands: () => Promise<Array<{ name: string; description: string; source: string; isSlashCommand: boolean }>>;
   /** MCP 服务器操作 */
   getMcpServers: () => Promise<Record<string, McpServerConfig>>;
   getMcpServerList: () => Promise<Array<{ name: string; config: McpServerConfig }>>;

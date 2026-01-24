@@ -8,13 +8,22 @@
         "templateIcon.ico",
         "!**/*.map",
         "!**/*.test.*",
-        "!**/*.spec.*"
+        "!**/*.spec.*",
+        "!dist-react/node_modules/**/*",
+        "!**/node_modules/*/{test,__tests__,tests,spec,example,examples}/**/*",
+        "!**/node_modules/*/{README,CHANGELOG,LICENSE,CHANGELOG.md,README.md}",
+        "!**/node_modules/*/{.github,.vscode,docs,doc}/**/*",
+        "!**/node_modules/*/{tsconfig.json,tsconfig.tsbuildinfo}",
+        "!**/node_modules/**/*.d.ts",
+        "!**/node_modules/**/*.md",
+        "!**/node_modules/**/*.map"
     ],
     "extraResources": [],
     "npmRebuild": false,
     "asarUnpack": [
         "node_modules/better-sqlite3/build/**/*.node",
-        "node_modules/@memvid/sdk/**/*.node"
+        "node_modules/@memvid/sdk/**/*.node",
+        "node_modules/@anthropic-ai/claude-agent-sdk/**/*"
     ],
     "icon": "./templateIcon.ico",
     "mac": {

@@ -28,7 +28,7 @@
             ]
         },
         "types": [
-            "./types"
+            "./src/types"
         ]
     },
     "include": [

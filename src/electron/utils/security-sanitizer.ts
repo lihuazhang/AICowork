@@ -1,10 +1,6 @@
 /**
  * 安全过滤器
  * 用于日志脱敏和输入验证
- *
- * @author Alan
- * @created 2026-01-23
- * @copyright AGPL-3.0
  */
 
 /**

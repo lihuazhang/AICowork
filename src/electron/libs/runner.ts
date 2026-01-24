@@ -9,7 +9,6 @@ export {
   clearRunnerCache,
   PerformanceMonitor,
   triggerAutoMemoryAnalysis,
-  getMemoryGuidancePrompt,
   type RunnerOptions,
   type RunnerHandle,
   type MemoryConfig,

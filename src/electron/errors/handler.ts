@@ -1,10 +1,6 @@
 /**
  * 错误处理器
  * 统一的错误处理和日志记录
- *
- * @author Claude Code
- * @created 2025-01-23
- * @copyright AGPL-3.0
  */
 
 import { log } from "../logger.js";

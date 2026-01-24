@@ -1,6 +1,9 @@
 /**
  * 语言检测工具
  * 检测用户输入的语言并返回语言首选项提示
+ * @author Alan <your.email@example.com>
+ * @copyright AGCPA v3.0
+ * @created 2024-01-24
  */
 
 /**
@@ -21,32 +24,30 @@ export interface LanguageDetectionResult {
 }
 
 /**
- * 语言特征模式
- * 基于字符范围和常见词汇模式进行简单检测
+ * 最大文本采样长度（字符数）
+ * 对于大文本，只分析前100个字符以提高性能
  */
-const LANGUAGE_PATTERNS: Record<Language, RegExp[]> = {
-  // 中文：CJK 统一汉字范围
-  zh: [
-    /[\u4e00-\u9fff]/,  // 基本汉字
-    /[\u3400-\u4dbf]/,  // 扩展A
-  ],
-  // 英文：基本拉丁字母
-  en: [
-    /^[a-zA-Z\s.,!?'"()-]+$/,
-  ],
-  // 日文：平假名、片假名、汉字
-  ja: [
-    /[\u3040-\u309f]/,  // 平假名
-    /[\u30a0-\u30ff]/,  // 片假名
-  ],
-  // 韩文：韩文字母
-  ko: [
-    /[\uac00-\ud7af]/,  // 韩文音节
-    /[\u1100-\u11ff]/,  // 韩文字母
-  ],
-  // 未知
-  unknown: [],
-};
+const MAX_SAMPLE_SIZE = 100;
+
+/**
+ * 语言缓存大小限制
+ */
+const CACHE_MAX_SIZE = 500;
+
+/**
+ * 预编译的正则表达式模式
+ * 使用静态常量避免重复创建正则表达式对象
+ */
+const PRECOMPILED_PATTERNS = {
+  // 中文字符（基本汉字 + 扩展A）
+  CHINESE: /[\u4e00-\u9fff\u3400-\u4dbf]/g,
+  // 日文字符（平假名 + 片假名）
+  JAPANESE: /[\u3040-\u309f\u30a0-\u30ff]/g,
+  // 韩文字符（音节 + 字母）
+  KOREAN: /[\uac00-\ud7af\u1100-\u11ff]/g,
+  // 英文字符（拉丁字母）
+  ENGLISH: /[a-zA-Z]/g,
+} as const;
 
 /**
  * 语言偏好提示模板
@@ -60,7 +61,36 @@ const LANGUAGE_HINTS: Record<Language, string> = {
 };
 
 /**
+ * 语言检测缓存
+ * 使用Map存储最近的语言检测结果，避免重复计算
+ */
+const languageCache = new Map<string, LanguageDetectionResult>();
+
+/**
+ * 生成缓存键
+ * 使用文本的前100个字符作为缓存键
+ */
+function getCacheKey(text: string): string {
+  return text.slice(0, 100);
+}
+
+/**
+ * 清理缓存
+ * 当缓存超过一定大小时，删除最旧的条目
+ */
+function cleanupCache(): void {
+  if (languageCache.size > CACHE_MAX_SIZE) {
+    const keysToDelete = Array.from(languageCache.keys()).slice(0, Math.floor(CACHE_MAX_SIZE * 0.2));
+    for (const key of keysToDelete) {
+      languageCache.delete(key);
+    }
+  }
+}
+
+/**
  * 检测文本语言
+ * @param text 待检测的文本
+ * @returns 语言检测结果
  */
 export function detectLanguage(text: string): LanguageDetectionResult {
   // 去除首尾空白
@@ -69,6 +99,18 @@ export function detectLanguage(text: string): LanguageDetectionResult {
   if (!trimmedText) {
     return createResult('unknown');
   }
+
+  // 检查缓存
+  const cacheKey = getCacheKey(trimmedText);
+  const cachedResult = languageCache.get(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  // 限制文本采样大小以提高性能
+  const sampleText = trimmedText.length > MAX_SAMPLE_SIZE
+    ? trimmedText.slice(0, MAX_SAMPLE_SIZE)
+    : trimmedText;
 
   // 统计各语言特征出现次数
   const scores: Record<Language, number> = {
@@ -79,26 +121,23 @@ export function detectLanguage(text: string): LanguageDetectionResult {
     unknown: 0,
   };
 
-  // 检测中文
-  const zhMatches = trimmedText.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g);
+  // 使用预编译的正则表达式进行匹配
+  const zhMatches = sampleText.match(PRECOMPILED_PATTERNS.CHINESE);
   if (zhMatches) {
     scores.zh = zhMatches.length;
   }
 
-  // 检测日文（平假名/片假名，排除汉字）
-  const jaMatches = trimmedText.match(/[\u3040-\u309f\u30a0-\u30ff]/g);
+  const jaMatches = sampleText.match(PRECOMPILED_PATTERNS.JAPANESE);
   if (jaMatches) {
     scores.ja = jaMatches.length;
   }
 
-  // 检测韩文
-  const koMatches = trimmedText.match(/[\uac00-\ud7af\u1100-\u11ff]/g);
+  const koMatches = sampleText.match(PRECOMPILED_PATTERNS.KOREAN);
   if (koMatches) {
     scores.ko = koMatches.length;
   }
 
-  // 检测英文（拉丁字母）
-  const enMatches = trimmedText.match(/[a-zA-Z]/g);
+  const enMatches = sampleText.match(PRECOMPILED_PATTERNS.ENGLISH);
   if (enMatches) {
     scores.en = enMatches.length;
   }
@@ -115,11 +154,17 @@ export function detectLanguage(text: string): LanguageDetectionResult {
   }
 
   // 如果最高分低于阈值，视为未知语言
-  if (maxScore < trimmedText.length * 0.2) {
+  if (maxScore < sampleText.length * 0.2) {
     detectedLanguage = 'unknown';
   }
 
-  return createResult(detectedLanguage);
+  const result = createResult(detectedLanguage);
+
+  // 缓存结果
+  languageCache.set(cacheKey, result);
+  cleanupCache();
+
+  return result;
 }
 
 /**

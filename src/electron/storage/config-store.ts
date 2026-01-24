@@ -4,6 +4,7 @@ import { join } from "path";
 import { log } from "../logger.js";
 import { getProviderDefaults } from "../libs/api-adapter.js";
 import type { ApiProvider } from "../config/constants.js";
+import { PROVIDER_COMPATIBILITY } from "../config/constants.js";
 import { saveApiConfigToEnv } from "../utils/env-file.js";
 
 // 使用 fs.promises 进行异步操作
@@ -105,13 +106,6 @@ export type ApiConfig = {
     min_top_p?: number;
     lastUpdated?: number;  // 时间戳
   };
-  /** 是否需要代理模式（用于 count_tokens 端点兼容性） */
-  needsProxy?: boolean;
-  needsProxyCheckedAt?: number;  // 检测时间戳
-  /** 用户配置覆盖：强制启用代理模式（覆盖白名单检测结果） */
-  forceProxy?: boolean;
-  /** 用户配置覆盖：跳过代理检测（用户确定不需要代理） */
-  skipProxyCheck?: boolean;
   /** 创建时间 */
   createdAt?: number;
   /** 更新时间 */
@@ -169,37 +163,26 @@ function migrateOldConfig(oldConfig: any): ApiConfigsStore {
   };
 }
 
-// 无需 API Key 的厂商（本地部署）
+// 无需 API Key 的厂商（本地部署）- 当前无此类厂商
 const NO_API_KEY_PROVIDERS: ReadonlySet<ApiProvider> = new Set([
-  'ollama',   // Ollama 本地部署
-  'vllm',     // vLLM 本地部署
-  'textgen',  // Text Generation WebUI
-  'localai',  // LocalAI
-  'fastchat', // FastChat
-  'lmstudio', // LM Studio
-  'jan',      // Jan AI
+  // 当前保留的厂商都需要 API Key
 ]);
 
 // 各厂商的 API Key 格式模式
 const API_KEY_PATTERNS: Partial<Record<ApiProvider, RegExp[]>> = {
   anthropic: [/^sk-ant-[a-zA-Z0-9_-]{91,}$/],
-  alibaba: [/^sk-[a-zA-Z0-9]{48,}$/],
   zhipu: [/^[0-9a-f]{32}\.[0-9a-f]{8}\.[0-9a-f]{8}$/],
-  moonshot: [/^sk-[a-zA-Z0-9]{43,}$/],
   deepseek: [/^sk-[a-zA-Z0-9-]{51,}$/],
+  alibaba: [/^sk-[a-zA-Z0-9]{48,}$/],
+  moonshot: [/^sk-[a-zA-Z0-9]{43,}$/],
   qiniu: [/^sk-[a-zA-Z0-9]{32,}$/],
-  huawei: [/^[a-zA-Z0-9_-]{32,}$/],
-  ollama: [/^.{0,}$/],
   n1n: [/^sk-[a-zA-Z0-9]{32,}$/],
   minimax: [/^.{20,}$/],
-  openai: [/^sk-[a-zA-Z0-9]{48,}$/],
   custom: [/^.{20,}$/],
 };
 
 /**
  * 验证 API Key 格式（根据厂商类型）
- *
- * 注意：本地部署厂商（ollama、vllm 等）不需要 API Key
  */
 function validateApiKey(apiKey: string, provider: ApiProvider): string[] {
   const errors: string[] = [];
@@ -310,7 +293,8 @@ function validateModel(model: string, provider: ApiProvider): string[] {
 
   // 验证模型是否在厂商支持列表中（可选）
   const defaults = getProviderDefaults(provider);
-  if (defaults.models.length > 0 && !defaults.models.includes(trimmed)) {
+  // 如果厂商不存在（无效类型），跳过模型列表验证
+  if (defaults && defaults.models.length > 0 && !defaults.models.includes(trimmed)) {
     log.warn(`[config-store] Model '${trimmed}' not in default list for ${provider}, may be custom model`);
   }
 
@@ -384,18 +368,14 @@ export function validateApiConfig(config: ApiConfig): ValidationResult {
   // 验证 model
   errors.push(...validateModel(config.model, provider));
 
-  // 验证 apiType
+  // 验证 apiType（只验证是否在支持的厂商列表中）
   const validProviders: ApiProvider[] = [
-    'anthropic', 'alibaba', 'zhipu', 'moonshot', 'deepseek',
-    'qiniu', 'huawei', 'ollama', 'vllm', 'textgen', 'localai',
-    'fastchat', 'lmstudio', 'jan', 'n1n', 'minimax', 'custom',
-    'openai', 'xingchen', 'tencent', 'iflytek', 'spark',
-    'sensetime', 'stepfun', 'lingyi', '01ai', 'abd',
-    'bestex', 'puyu', 'volcengine', 'doubao', 'hunyuan', 'wenxin',
+    'anthropic', 'zhipu', 'deepseek', 'alibaba',
+    'qiniu', 'moonshot', 'n1n', 'minimax', 'custom',
   ];
 
   if (!validProviders.includes(config.apiType as ApiProvider)) {
-    errors.push(`不支持的 API 类型: ${config.apiType}`);
+    errors.push(`不支持的 API 类型: ${config.apiType}。支持的厂商: ${validProviders.join(', ')}`);
   }
 
   return {
@@ -521,10 +501,10 @@ function inferApiTypeFromBaseURL(baseURL: string): ApiType {
       }
     }
 
-    // 检查路径特征
+    // 检查路径特征（阿里云兼容模式路径）
     const pathname = url.pathname.toLowerCase();
-    if (pathname.includes('/compatible-mode') || pathname.includes('/openai')) {
-      // 有 openai 兼容路径，可能是 alibaba 或其他厂商
+    if (pathname.includes('/compatible-mode')) {
+      // 有兼容模式路径，可能是 alibaba
       // 优先根据域名判断
       if (hostname.includes('aliyun') || hostname.includes('dashscope')) {
         return 'alibaba';
@@ -648,24 +628,6 @@ export function loadAllApiConfigs(): ApiConfigsStore | null {
 export function saveApiConfig(config: ApiConfig): void {
   const configPath = getConfigPath();
   const userDataPath = app.getPath("userData");
-
-  // 清除代理检测缓存，确保下次运行时重新检测
-  try {
-    // 动态导入避免循环依赖（ESM 使用 import 而非 require）
-    import("../services/claude-settings.js").then((module) => {
-      if (module.clearProxyCache) {
-        module.clearProxyCache();
-      }
-    }).catch(() => {
-      // 忽略导入失败，继续保存配置
-    });
-  } catch (e) {
-    // 生成错误 ID 用于追踪
-    const errorId = `proxy-cache-clear-${Date.now()}`;
-    log.error(`[config-store][${errorId}] Failed to clear proxy cache, configuration may be inconsistent:`, e);
-    // 注意：不抛出异常，允许配置保存继续进行
-    // 用户可以通过重启应用来清除缓存
-  }
 
   try {
     // 确保目录存在并验证创建结果
@@ -860,6 +822,19 @@ export function setActiveApiConfig(configId: string): void {
     // 保存更新后的配置
     writeFileSync(configPath, JSON.stringify(store, null, 2), "utf8");
     log.info(`[config-store] Active API config set to: ${configId}`);
+
+    // 清除 API 配置缓存，确保下次获取最新配置
+    try {
+      // 动态导入并调用缓存清除函数
+      import("../services/claude-settings.js").then(module => {
+        module.clearApiConfigCache?.();
+        log.info("[config-store] ✓ API config cache cleared");
+      }).catch((cacheError) => {
+        log.warn("[config-store] Failed to clear cache:", cacheError);
+      });
+    } catch (cacheError) {
+      log.warn("[config-store] Failed to clear cache:", cacheError);
+    }
 
     // 更新 .env 文件（使用解密后的 key）
     try {
@@ -1075,32 +1050,26 @@ export function getSupportedProviders(): Array<{
     {
       id: 'qiniu',
       name: '七牛云 (AI大模型)',
-      description: '七牛云 - 支持 50+ 模型，兼容 Anthropic/OpenAI 格式',
+      description: '七牛云 - 支持 50+ 模型，兼容 Anthropic 格式',
       icon: '🐮',
     },
     {
       id: 'moonshot',
       name: '月之暗面 (Kimi)',
-      description: 'Kimi - 提供 Anthropic 兼容端点',
+      description: '月之暗面 - 提供 Anthropic 兼容端点',
       icon: '🌙',
-    },
-    {
-      id: 'huawei',
-      name: '华为云 (ModelArts)',
-      description: '华为云 ModelArts - 提供 Anthropic 兼容接口',
-      icon: '🔷',
-    },
-    {
-      id: 'ollama',
-      name: 'Ollama (本地)',
-      description: 'Ollama - 本地部署，支持 Anthropic API',
-      icon: '🦙',
     },
     {
       id: 'n1n',
       name: 'N1N.AI',
       description: 'N1N.AI - 国内合规专线，支持 Anthropic 格式',
       icon: '🚀',
+    },
+    {
+      id: 'minimax',
+      name: 'MiniMax',
+      description: 'MiniMax - 提供 Anthropic 兼容端点',
+      icon: '✨',
     },
     {
       id: 'custom',
@@ -1137,16 +1106,102 @@ function getProviderDescription(provider: ApiProvider): string {
     zhipu: '智谱 AI ChatGLM - Anthropic 兼容端点，支持 GLM-4、GLM-3-Turbo、Flash 等',
     deepseek: 'DeepSeek - Anthropic 兼容端点，支持 DeepSeek Chat、DeepSeek Coder',
     alibaba: '阿里云百炼 - Anthropic 兼容端点，支持 Qwen Turbo、Plus、Max 等模型',
-    qiniu: '七牛云 AI 大模型，支持 50+ 主流模型，兼容 Anthropic/OpenAI 格式',
+    qiniu: '七牛云 AI 大模型，支持 50+ 主流模型，兼容 Anthropic 格式',
     moonshot: '月之暗面 Kimi - Anthropic 兼容端点，支持 128K、32K、8K 等长文本模型',
-    huawei: '华为云 ModelArts - Anthropic 兼容接口，支持多种开源模型',
-    ollama: 'Ollama 本地部署，支持 Anthropic API 格式',
     n1n: 'N1N.AI 国内合规专线，支持 Anthropic 格式',
     minimax: 'MiniMax - Anthropic 兼容端点，支持 MiniMax-M2.1 等模型',
-    openai: 'OpenAI API，支持 GPT-4o、GPT-4 Turbo、GPT-3.5 Turbo 等模型',
     custom: '自定义 API，需兼容 Anthropic 格式',
   };
 
   return descriptions[provider] || '自定义 API';
+}
+
+/**
+ * 配置兼容性验证结果
+ */
+export interface CompatibilityValidationResult {
+  /** 是否兼容（不推荐不代表不兼容） */
+  compatible: boolean;
+  /** 是否推荐使用 */
+  recommended: boolean;
+  /** 警告信息（不推荐时显示） */
+  warning?: string;
+  /** 兼容性详情 */
+  details: {
+    format: 'anthropic' | 'openai';
+    note?: string;
+  };
+}
+
+/**
+ * 验证 API 配置的兼容性
+ * 检查厂商是否与 Anthropic SDK 原生兼容
+ *
+ * @param config API 配置
+ * @returns 兼容性验证结果
+ *
+ * @author Alan
+ * @created 2025-01-24
+ */
+export function validateApiCompatibility(config: ApiConfig): CompatibilityValidationResult {
+  const provider = config.apiType || 'anthropic';
+  const compatibility = PROVIDER_COMPATIBILITY[provider];
+
+  if (!compatibility) {
+    // 未知厂商，保守处理
+    return {
+      compatible: true,
+      recommended: false,
+      warning: `未知厂商: ${provider}，可能无法正常工作`,
+      details: { format: 'openai' },
+    };
+  }
+
+  if (!compatibility.recommended) {
+    // 不推荐的厂商（OpenAI 格式）
+    return {
+      compatible: true, // 配置本身有效，只是不推荐
+      recommended: false,
+      warning: `厂商 "${provider}" 不被 Anthropic SDK 原生支持。${compatibility.note || '可能无法正常工作。建议使用支持 Anthropic 格式的厂商（智谱 AI、DeepSeek 等）。'}`,
+      details: {
+        format: compatibility.format,
+        note: compatibility.note,
+      },
+    };
+  }
+
+  // 推荐的厂商（Anthropic 格式）
+  return {
+    compatible: true,
+    recommended: true,
+    details: {
+      format: compatibility.format,
+      note: compatibility.note,
+    },
+  };
+}
+
+/**
+ * 获取推荐的厂商列表
+ * 用于 UI 优先显示推荐厂商
+ *
+ * @returns 推荐的厂商列表
+ */
+export function getRecommendedProviders(): ApiProvider[] {
+  return Object.entries(PROVIDER_COMPATIBILITY)
+    .filter(([, info]) => info.recommended)
+    .map(([provider]) => provider as ApiProvider);
+}
+
+/**
+ * 获取不推荐的厂商列表
+ * 用于 UI 标记或提示
+ *
+ * @returns 不推荐的厂商列表
+ */
+export function getNotRecommendedProviders(): ApiProvider[] {
+  return Object.entries(PROVIDER_COMPATIBILITY)
+    .filter(([, info]) => !info.recommended)
+    .map(([provider]) => provider as ApiProvider);
 }
 

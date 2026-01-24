@@ -91,8 +91,61 @@ async function readSettings(): Promise<any> {
 }
 
 /**
+ * 扫描指定目录中的插件（并行优化版本）
+ * 使用 Promise.all 并行检查所有子目录，大幅提升性能
+ */
+async function scanPluginsDir(dir: string, dirName: string): Promise<SdkPluginConfig[]> {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+
+    // 过滤出所有子目录
+    const dirEntries = entries.filter(entry => entry.isDirectory());
+
+    // 并行检查所有目录
+    const results = await Promise.allSettled(
+      dirEntries.map(async (entry) => {
+        const pluginPath = join(dir, entry.name);
+        const skillFile = join(pluginPath, 'SKILL.md');
+        const packageFile = join(pluginPath, 'package.json');
+
+        try {
+          // 并行检查两个文件
+          const [hasSkill, hasPackage] = await Promise.all([
+            fs.access(skillFile).then(() => true).catch(() => false),
+            fs.access(packageFile).then(() => true).catch(() => false)
+          ]);
+
+          if (hasSkill || hasPackage) {
+            log.info(`[SDK Loader] Loaded plugin from ${dirName}: ${entry.name}`);
+            return {
+              type: 'local' as const,
+              path: pluginPath
+            };
+          }
+          return null;
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    // 过滤出成功的结果
+    const plugins = results
+      .filter((r): r is PromiseFulfilledResult<SdkPluginConfig> =>
+        r.status === 'fulfilled' && r.value !== null
+      )
+      .map(r => r.value);
+
+    return plugins;
+  } catch (error) {
+    log.warn(`[SDK Loader] Failed to read ${dirName} directory:`, error);
+    return [];
+  }
+}
+
+/**
  * 加载插件列表
- * 从 ~/.claude/plugins 目录扫描插件
+ * SDK 自动处理 ~/.claude/skills/，我们只加载 ~/.claude/plugins/
  * 降级机制：目录不存在 → 从 settings.json 读取 → 空列表
  */
 async function loadPlugins(): Promise<SdkPluginConfig[]> {
@@ -100,39 +153,12 @@ async function loadPlugins(): Promise<SdkPluginConfig[]> {
   const pluginsDir = getPluginsDir();
 
   // 方法 1: 从 plugins 目录扫描
-  try {
-    const entries = await fs.readdir(pluginsDir, { withFileTypes: true });
+  const pluginsFromPluginsDir = await scanPluginsDir(pluginsDir, 'plugins');
+  plugins.push(...pluginsFromPluginsDir);
 
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const pluginPath = join(pluginsDir, entry.name);
-        // 检查是否有 SKILL.md 或 package.json 等插件标识文件
-        try {
-          const skillFile = join(pluginPath, 'SKILL.md');
-          const packageFile = join(pluginPath, 'package.json');
-
-          const hasSkill = await fs.access(skillFile).then(() => true).catch(() => false);
-          const hasPackage = await fs.access(packageFile).then(() => true).catch(() => false);
-
-          if (hasSkill || hasPackage) {
-            plugins.push({
-              type: 'local',
-              path: pluginPath
-            });
-            log.info(`[SDK Loader] Loaded plugin: ${entry.name}`);
-          }
-        } catch {
-          // 忽略单个插件的错误
-        }
-      }
-    }
-
-    if (plugins.length > 0) {
-      log.info(`[SDK Loader] Total plugins loaded from directory: ${plugins.length}`);
-      return plugins;
-    }
-  } catch (error) {
-    log.warn('[SDK Loader] Failed to read plugins directory, trying fallback:', error);
+  if (plugins.length > 0) {
+    log.info(`[SDK Loader] Total plugins loaded from plugins directory: ${plugins.length}`);
+    return plugins;
   }
 
   // 方法 2: 降级 - 从 settings.json 读取已启用的插件
@@ -207,31 +233,48 @@ async function loadAgents(): Promise<{ agents: Record<string, SdkAgentConfig>; d
       }
     }
 
-    // 方法 3: 从 agents 目录加载代理配置
+    // 方法 3: 从 agents 目录加载代理配置（并行优化版本）
     const agentsDir = getAgentsDir();
     const entries = await fs.readdir(agentsDir, { withFileTypes: true });
 
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
+    // 过滤出目录并并行加载配置
+    const dirEntries = entries.filter(e => e.isDirectory());
+    const agentResults = await Promise.allSettled(
+      dirEntries.map(async (entry) => {
         const configPath = join(agentsDir, entry.name, 'config.json');
         try {
           const content = await fs.readFile(configPath, 'utf-8');
           const config = JSON.parse(content);
 
-          // 转换为 SDK 的 AgentDefinition 格式
-          agents[entry.name] = {
-            description: config.description || `Agent: ${entry.name}`,
-            prompt: config.systemPrompt || config.prompt || '',
-            tools: config.allowedTools,
-            disallowedTools: config.disallowedTools,
-            model: config.model === 'inherit' ? 'inherit' : config.model === 'haiku' ? 'haiku' : undefined,
-            skills: config.skills
-          };
-
           log.info(`[SDK Loader] Loaded agent: ${entry.name}`);
+
+          // 正确处理 model 类型
+          let model: SdkAgentConfig['model'];
+          if (config.model === 'inherit' || config.model === 'haiku') {
+            model = config.model;
+          }
+
+          return {
+            name: entry.name,
+            config: {
+              description: config.description || `Agent: ${entry.name}`,
+              prompt: config.systemPrompt || config.prompt || '',
+              tools: config.allowedTools,
+              disallowedTools: config.disallowedTools,
+              model,
+              skills: config.skills
+            }
+          };
         } catch {
-          // 跳过无效的代理配置
+          return null;
         }
+      })
+    );
+
+    // 将成功的结果添加到 agents 对象
+    for (const result of agentResults) {
+      if (result.status === 'fulfilled' && result.value) {
+        agents[result.value.name] = result.value.config;
       }
     }
 

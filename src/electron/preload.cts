@@ -66,8 +66,6 @@ electron.contextBridge.exposeInMainWorld("electron", {
         invoke("open-external", url),
     renameSession: (sessionId: string, newTitle: string) =>
         ipcInvoke("session.rename", sessionId, newTitle),
-    getSlashCommands: () =>
-        invoke("get-slash-commands"),
     // MCP 服务器操作
     getMcpServers: () =>
         invoke("get-mcp-servers"),
@@ -99,6 +97,9 @@ electron.contextBridge.exposeInMainWorld("electron", {
         ipcInvoke("get-skill-metadata", skillName),
     getAllSkillsMetadata: () =>
         ipcInvoke("get-all-skills-metadata"),
+    // 批量获取技能数据（优化：单次 IPC 调用获取列表、元数据和标签）
+    getAllSkillsData: () =>
+        invoke("get-all-skills-data"),
     setSkillNote: (skillName: string, note: string) =>
         ipcInvoke("set-skill-note", skillName, note),
     deleteSkillNote: (skillName: string) =>
@@ -135,6 +136,9 @@ electron.contextBridge.exposeInMainWorld("electron", {
         ipcInvoke("get-orchestration-config"),
     saveOrchestrationConfig: (config: any) =>
         ipcInvoke("save-orchestration-config", config),
+    // 批量获取 Agent 配置（优化：单次 IPC 调用获取所有配置）
+    getAllAgentConfigs: () =>
+        invoke("get-all-agent-configs"),
     openAgentsDirectory: () =>
         ipcInvoke("open-agents-directory"),
     // Hooks 操作

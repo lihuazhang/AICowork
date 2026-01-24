@@ -1,10 +1,6 @@
 /**
  * 应用基础错误类
  * 所有自定义错误的基类
- *
- * @author Claude Code
- * @created 2025-01-23
- * @copyright AGPL-3.0
  */
 
 /**

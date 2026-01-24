@@ -1,15 +1,53 @@
 /**
  * API 适配器工具函数
  * 提供 API 格式检测和厂商推断功能
+ * @author Alan <your.email@example.com>
+ * @copyright AGCPA v3.0
+ * @created 2024-01-24
  */
 
 import type { ApiProvider } from '../../config/constants.js';
 import type { UrlFormatDetection, ApiFormat } from './types.js';
 
 /**
+ * 缓存大小限制
+ */
+const CACHE_MAX_SIZE = 200;
+
+/**
+ * URL格式检测缓存
+ */
+const apiFormatCache = new Map<string, UrlFormatDetection>();
+
+/**
+ * 厂商推断结果缓存
+ */
+const providerCache = new Map<string, ApiProvider | null>();
+
+/**
+ * 清理缓存
+ */
+function cleanupCache(cache: Map<string, unknown>): void {
+  if (cache.size > CACHE_MAX_SIZE) {
+    const keysToDelete = Array.from(cache.keys()).slice(0, Math.floor(CACHE_MAX_SIZE * 0.2));
+    for (const key of keysToDelete) {
+      cache.delete(key);
+    }
+  }
+}
+
+/**
  * 从 URL 中检测 API 格式
+ * @param baseURL - 基础 URL
+ * @returns URL 格式检测结果
  */
 export function detectApiFormat(baseURL: string): UrlFormatDetection {
+  // 检查缓存
+  const cached = apiFormatCache.get(baseURL);
+  if (cached) {
+    return cached;
+  }
+
   const url = new URL(baseURL);
   const pathname = url.pathname;
 
@@ -30,26 +68,46 @@ export function detectApiFormat(baseURL: string): UrlFormatDetection {
       const cleanPathname = pathname.replace(pattern, '').replace(/\/+$/, '') || '';
       const cleanBaseURL = `${url.origin}${cleanPathname}`;
 
-      return {
+      const result = {
         format,
         cleanBaseURL,
         detectedPath,
       };
+
+      // 缓存结果
+      apiFormatCache.set(baseURL, result);
+      cleanupCache(apiFormatCache);
+
+      return result;
     }
   }
 
   // 未检测到明确格式，返回原始 URL
-  return {
-    format: 'unknown',
+  const result = {
+    format: 'unknown' as const,
     cleanBaseURL: baseURL.replace(/\/+$/, ''),
     detectedPath: '',
   };
+
+  // 缓存结果
+  apiFormatCache.set(baseURL, result);
+  cleanupCache(apiFormatCache);
+
+  return result;
 }
 
 /**
  * 从 URL 路径自动推断 API 厂商
+ * @param baseURL - 基础 URL
+ * @returns 推断的厂商类型，如果无法推断则返回 null
  */
 export function inferProviderFromUrl(baseURL: string): ApiProvider | null {
+  // 检查缓存
+  const cached = providerCache.get(baseURL);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   const url = new URL(baseURL);
   const hostname = url.hostname.toLowerCase();
   const pathname = url.pathname.toLowerCase();
@@ -62,8 +120,6 @@ export function inferProviderFromUrl(baseURL: string): ApiProvider | null {
     { pattern: /moonshot\.cn/, provider: 'moonshot' },
     { pattern: /deepseek\.(com|cn)/, provider: 'deepseek' },
     { pattern: /qnaigc\.com/, provider: 'qiniu' },
-    { pattern: /volcengine\.com/, provider: 'huawei' },
-    { pattern: /volces\.com/, provider: 'huawei' },
     { pattern: /n1n\.ai/, provider: 'n1n' },
     { pattern: /minimax/i, provider: 'minimax' },
   ];
@@ -71,15 +127,24 @@ export function inferProviderFromUrl(baseURL: string): ApiProvider | null {
   // 按域名匹配
   for (const { pattern, provider } of domainProviders) {
     if (pattern.test(hostname)) {
+      // 缓存结果
+      providerCache.set(baseURL, provider);
+      cleanupCache(providerCache);
       return provider;
     }
   }
 
   // 按路径格式推断
   if (pathname.includes('/anthropic')) {
-    return 'custom';
+    const result: ApiProvider = 'custom';
+    providerCache.set(baseURL, result);
+    cleanupCache(providerCache);
+    return result;
   }
 
+  // 缓存 null 结果
+  providerCache.set(baseURL, null);
+  cleanupCache(providerCache);
   return null;
 }
 

@@ -1,8 +1,6 @@
 /**
  * 应用服务初始化器
  * 在应用启动时预加载关键资源
- * @author Claude
- * @copyright AGCPA v3.0
  */
 
 import { log } from '../logger.js';
@@ -19,12 +17,11 @@ export async function initializeAppServices(): Promise<void> {
   const results = await Promise.allSettled([
     initializeSdkConfigCache(),
     prewarmMcpServers(),
-    precheckProxySettings(),
   ]);
 
   // 记录初始化结果
   results.forEach((result, index) => {
-    const serviceName = ['SDK Config Cache', 'MCP Servers', 'Proxy Settings'][index];
+    const serviceName = ['SDK Config Cache', 'MCP Servers'][index];
     if (result.status === 'fulfilled') {
       log.info(`[AppInit] ✓ ${serviceName} initialized`);
     } else {
@@ -51,32 +48,16 @@ async function initializeSdkConfigCache(): Promise<void> {
 
 /**
  * 预热 MCP 服务器
- * 后台异步启动，不阻塞应用启动
+ * 注意：MCP 服务器实例管理由 SDK 处理，无需预热
+ * 此函数仅用于验证 MCP 配置可正常加载
  */
 async function prewarmMcpServers(): Promise<void> {
   try {
-    const { getMcpServerManager } = await import('../managers/mcp-server-manager.js');
-    const mcpManager = getMcpServerManager();
+    const { getMcpServers } = await import('../managers/mcp-server-manager.js');
+    const servers = await getMcpServers();
 
-    // 预热服务器（会话启动时直接使用）
-    await mcpManager.acquireServers();
-
-    log.info('[AppInit] MCP servers pre-warmed');
+    log.info(`[AppInit] MCP configs loaded: ${Object.keys(servers).length} servers`);
   } catch (error) {
-    log.warn('[AppInit] MCP pre-warm failed (non-critical):', error);
-  }
-}
-
-/**
- * 预检测代理设置
- * 后台异步检测，不阻塞应用启动
- */
-async function precheckProxySettings(): Promise<void> {
-  try {
-    const { precheckProxyNeeds } = await import('../services/claude-settings.js');
-    await precheckProxyNeeds();
-    log.info('[AppInit] Proxy pre-check completed');
-  } catch (error) {
-    log.warn('[AppInit] Proxy pre-check failed (non-critical):', error);
+    log.warn('[AppInit] MCP config loading failed (non-critical):', error);
   }
 }

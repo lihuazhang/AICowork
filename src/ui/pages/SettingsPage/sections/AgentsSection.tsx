@@ -103,14 +103,27 @@ export function AgentsSection() {
     memoryCapacity: 100,
   });
 
-  // 加载配置
+  // 加载配置（批量加载优化：单次 IPC 调用获取所有配置）
   useEffect(() => {
-    loadGlobalConfig();
-    loadOrchestrationConfig();
-    loadAgentsList();
+    loadAllConfigs();
   }, []);
 
-  // 加载编排配置
+  // 批量加载所有 Agent 配置
+  const loadAllConfigs = async () => {
+    setLoading(true);
+    try {
+      const configs = await window.electron.getAllAgentConfigs();
+      setGlobalConfig(configs.globalConfig);
+      setOrchestration(configs.orchestrationConfig);
+      setAgents(configs.agentsList);
+    } catch (err) {
+      console.error('Failed to load agent configs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 加载编排配置（单独调用，用于配置更新后刷新）
   const loadOrchestrationConfig = async () => {
     try {
       const config = await window.electron.getOrchestrationConfig();
@@ -128,7 +141,7 @@ export function AgentsSection() {
     }
   }, [success]);
 
-  // 加载全局配置
+  // 加载全局配置（单独调用，用于配置更新后刷新）
   const loadGlobalConfig = async () => {
     setLoading(true);
     try {
@@ -141,7 +154,7 @@ export function AgentsSection() {
     }
   };
 
-  // 加载 Agents 列表
+  // 加载 Agents 列表（单独调用，用于列表更新后刷新）
   const loadAgentsList = async () => {
     try {
       const list = await window.electron.getAgentsList();
@@ -166,6 +179,8 @@ export function AgentsSection() {
     try {
       const result = await window.electron.saveGlobalAgentConfig(globalConfig);
       if (result.success) {
+        // 保存成功后从服务器刷新配置，确保数据同步
+        await loadGlobalConfig();
         setSuccess(true);
         setHasChanges(false);
       } else {
@@ -204,6 +219,8 @@ export function AgentsSection() {
     try {
       const result = await window.electron.saveOrchestrationConfig(orchestration);
       if (result.success) {
+        // 保存成功后从服务器刷新配置，确保数据同步
+        await loadOrchestrationConfig();
         setSuccess(true);
         setOrchestrationHasChanges(false);
       } else {

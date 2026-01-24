@@ -3,7 +3,6 @@
  */
 
 import { log } from "./logger.js";
-import { detectApiFormat } from "./libs/api-adapter.js";
 
 export interface ApiConfig {
   apiKey: string;

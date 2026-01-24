@@ -199,8 +199,6 @@ interface Window {
         openExternal: (url: string) => Promise<{ success: boolean; error?: string }>;
         /** 重命名会话 */
         renameSession: (sessionId: string, newTitle: string) => Promise<{ success: boolean; error?: string }>;
-        /** 获取可用的斜杠命令和技能列表 */
-        getSlashCommands: () => Promise<Array<{ name: string; description: string; source: string; isSlashCommand: boolean }>>;
         /** MCP 服务器操作 */
         getMcpServers: () => Promise<Record<string, {
             name: string;
@@ -277,6 +275,12 @@ interface Window {
         /** 技能元数据操作 */
         getSkillMetadata: (skillName: string) => Promise<{ metadata: { skillName: string; note?: string; tags: string[]; updatedAt: number } | null; tags: Array<{ id: string; name: string; color: string; createdAt: number }> } | null>;
         getAllSkillsMetadata: () => Promise<Record<string, { metadata: { skillName: string; note?: string; tags: string[]; updatedAt: number }; tags: Array<{ id: string; name: string; color: string; createdAt: number }> }>>;
+        /** 批量获取技能数据（优化：单次 IPC 调用） */
+        getAllSkillsData: () => Promise<{
+            skillsList: Array<{ name: string; description: string; prompt: string; script?: { type: 'javascript' | 'python'; content?: string; path?: string }; createdAt: number; updatedAt: number }>;
+            metadata: Record<string, { metadata: { skillName: string; note?: string; tags: string[]; updatedAt: number }; tags: Array<{ id: string; name: string; color: string; createdAt: number }> }>;
+            tags: Array<{ id: string; name: string; color: string; createdAt: number }>;
+        }>;
         setSkillNote: (skillName: string, note: string) => Promise<{ success: boolean; error?: string }>;
         deleteSkillNote: (skillName: string) => Promise<{ success: boolean; error?: string }>;
         /** 标签操作 */
@@ -377,6 +381,40 @@ interface Window {
             enableAggregation?: boolean;
             aggregationStrategy?: 'first' | 'all' | 'majority' | 'concatenate';
         }) => Promise<{ success: boolean; error?: string }>;
+        /** 批量获取所有 Agent 配置（优化：单次 IPC 调用） */
+        getAllAgentConfigs: () => Promise<{
+            globalConfig: {
+                maxSubAgents: number;
+                defaultAgentId: string;
+                autoEnableSubAgents: boolean;
+                timeoutSeconds: number;
+            };
+            orchestrationConfig: {
+                mode: 'parallel' | 'sequential' | 'alternating' | 'cyclic';
+                agentSequence: string[];
+                maxConcurrency?: number;
+                cycleCount?: number;
+                stopOnFailure?: boolean;
+                agentTimeout?: number;
+                enableAggregation?: boolean;
+                aggregationStrategy?: 'first' | 'all' | 'majority' | 'concatenate';
+            };
+            agentsList: Array<{
+                id: string;
+                name: string;
+                description: string;
+                type: 'builtin' | 'custom';
+                systemPrompt: string;
+                maxSubAgents?: number;
+                timeoutSeconds?: number;
+                allowedTools?: string[];
+                allowedMcpServers?: string[];
+                enableMemory?: boolean;
+                memoryCapacity?: number;
+                createdAt?: number;
+                updatedAt?: number;
+            }>;
+        }>;
         validateOrchestrationConfig: (config: {
             mode: 'parallel' | 'sequential' | 'alternating' | 'cyclic';
             agentSequence: string[];

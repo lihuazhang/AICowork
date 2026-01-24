@@ -139,19 +139,6 @@ describe('config-store', () => {
       expect(result.valid).toBe(false);
       expect(result.errors.some(e => e.includes('非法字符'))).toBe(true);
     });
-
-    it('应该接受 Ollama 的空 API Key', () => {
-      const config = {
-        id: 'test-1',
-        name: 'Ollama Config',
-        apiKey: '',
-        baseURL: 'http://localhost:11434',
-        model: 'llama2',
-        apiType: 'ollama' as const,
-      };
-      const result = validateApiConfig(config);
-      expect(result.valid).toBe(true);
-    });
   });
 
   describe('loadApiConfig', () => {

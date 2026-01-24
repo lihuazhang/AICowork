@@ -29,17 +29,8 @@ export function createPermissionHandler(
     // 检测删除操作 - 需要用户确认
     const isDeletionOperation = checkIfDeletionOperation(toolName, input);
 
-    // 记录所有工具调用（使用 info 级别确保输出）
-    log.info(`[Tool] toolName=${toolName}, isDeletion=${isDeletionOperation}`);
-    if (toolName === "Bash") {
-      const cmd = (input as Record<string, unknown>).command;
-      log.info(`[Tool] Bash command: ${cmd}`);
-    }
-    if (toolName === "Write") {
-      const filePath = (input as Record<string, unknown>).path;
-      const content = (input as Record<string, unknown>).content;
-      log.info(`[Tool] Write file=${filePath}, contentLength=${String(content).length}`);
-    }
+    // 记录所有工具调用（使用 debug 级别减少日志量）
+    log.debug(`[Tool] ${toolName}, isDeletion=${isDeletionOperation}`);
 
     // AskUserQuestion 或删除操作都需要用户响应
     if (toolName === "AskUserQuestion" || isDeletionOperation) {
@@ -105,7 +96,8 @@ export async function handleToolUseEvent(
   if (memConfig.enabled) {
     // 快速记忆工具
     if (toolName === "memory_search" || toolName === "memory_store" || toolName === "memory_ask") {
-      log.info(`[Memory Tool] Quick tool called: ${toolName}`, toolInput);
+      // 使用 debug 级别记录
+      log.debug(`[Memory Tool] ${toolName}`);
 
       if (toolName === "memory_store") {
         onEvent({
@@ -129,7 +121,7 @@ export async function handleToolUseEvent(
     }
     // Claude Memory Tool 命令
     else if (toolName === "memory") {
-      log.info(`[Memory Tool] File tool called: ${toolName}`, toolInput);
+      log.debug(`[Memory Tool] memory command`);
 
       const subCommand = (toolInput as Record<string, unknown>)?.command || (toolInput as Record<string, unknown>)?.subcommand;
       if (subCommand === "create") {

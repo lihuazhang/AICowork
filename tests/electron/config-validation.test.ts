@@ -2,10 +2,11 @@
  * @author      Alan
  * @copyright   AGCPA v3.0
  * @created     2026-01-21
+ * @updated     2026-01-24 (移除已删除厂商的测试)
  * @Email       None
  *
  * 配置验证单元测试
- * 测试 API 配置的验证逻辑，包括无需 API Key 的本地部署厂商
+ * 测试 API 配置的验证逻辑
  */
 
 import { describe, it, expect } from 'vitest';
@@ -31,7 +32,7 @@ describe('API 配置验证', () => {
     it('DeepSeek 配置验证 - 有效配置', () => {
       const config: ApiConfig = {
         apiKey: 'sk-abcdef1234567890abcdefghijklmnopqrstuvwxyz12345',
-        baseURL: 'https://api.deepseek.com/anthropic',
+        baseURL: 'https://api.deepseek.com',
         model: 'deepseek-chat',
         apiType: 'deepseek',
       };
@@ -99,42 +100,6 @@ describe('API 配置验证', () => {
     });
   });
 
-  describe('本地部署厂商（无需 API Key）', () => {
-    const noApiKeyProviders: ApiProvider[] = [
-      'ollama', 'vllm', 'textgen', 'localai', 'fastchat', 'lmstudio', 'jan',
-    ];
-
-    noApiKeyProviders.forEach(provider => {
-      it(`${provider} 应该允许空的 API Key`, () => {
-        const config: ApiConfig = {
-          apiKey: '',
-          baseURL: 'http://localhost:11434',
-          model: 'llama3',
-          apiType: provider,
-        };
-
-        const result = validateApiConfig(config);
-
-        expect(result.valid).toBe(true);
-        expect(result.errors).toHaveLength(0);
-      });
-
-      it(`${provider} 应该允许任意 API Key 值`, () => {
-        const config: ApiConfig = {
-          apiKey: 'any-value-is-ok',
-          baseURL: 'http://localhost:11434',
-          model: 'llama3',
-          apiType: provider,
-        };
-
-        const result = validateApiConfig(config);
-
-        expect(result.valid).toBe(true);
-        expect(result.errors).toHaveLength(0);
-      });
-    });
-  });
-
   describe('BaseURL 验证', () => {
     it('有效的 HTTPS URL 应该通过验证', () => {
       const config: ApiConfig = {
@@ -151,10 +116,10 @@ describe('API 配置验证', () => {
 
     it('本地 HTTP URL 应该通过验证', () => {
       const config: ApiConfig = {
-        apiKey: 'test-key',
+        apiKey: 'sk-test-key-12345678901234567890',
         baseURL: 'http://localhost:11434',
         model: 'llama3',
-        apiType: 'ollama',
+        apiType: 'custom',
       };
 
       const result = validateApiConfig(config);
@@ -350,12 +315,25 @@ describe('API 配置验证', () => {
       expect(result.valid).toBe(true);
     });
 
-    it('OpenAI API Key 格式验证', () => {
+    it('N1N.AI API Key 格式验证', () => {
       const config: ApiConfig = {
-        apiKey: 'sk-abcdefghijklmnopqrstuvwxyz1234567890abcd',
-        baseURL: 'https://api.openai.com',
-        model: 'gpt-4o',
-        apiType: 'openai',
+        apiKey: 'sk-abcdefghijklmnopqrstuvwxyz123456',
+        baseURL: 'https://api.n1n.ai',
+        model: 'claude-sonnet-4-20250514',
+        apiType: 'n1n',
+      };
+
+      const result = validateApiConfig(config);
+
+      expect(result.valid).toBe(true);
+    });
+
+    it('MiniMax API Key 格式验证', () => {
+      const config: ApiConfig = {
+        apiKey: 'sk-abcdefghijklmnopqrstuvwxyz123456',
+        baseURL: 'https://api.minimaxi.com',
+        model: 'MiniMax-M2.1',
+        apiType: 'minimax',
       };
 
       const result = validateApiConfig(config);
@@ -420,26 +398,16 @@ describe('API 配置验证', () => {
       expect(resultAfter.valid).toBe(true);
     });
 
-    it('DeepSeek - 无路径应自动添加 /anthropic', () => {
-      const oldConfig: ApiConfig = {
+    it('DeepSeek - 无路径应保持不变', () => {
+      const config: ApiConfig = {
         apiKey: 'sk-abcdefghijklmnopqrstuvwxyz123456',
         baseURL: 'https://api.deepseek.com',
         model: 'deepseek-chat',
         apiType: 'deepseek',
       };
 
-      const result = validateApiConfig(oldConfig);
+      const result = validateApiConfig(config);
       expect(result.valid).toBe(true);
-
-      // 新的正确的 baseURL
-      const newBaseURL = 'https://api.deepseek.com/anthropic';
-      const newConfig: ApiConfig = {
-        ...oldConfig,
-        baseURL: newBaseURL,
-      };
-
-      const resultAfter = validateApiConfig(newConfig);
-      expect(resultAfter.valid).toBe(true);
     });
 
     it('智谱 AI - 无路径应自动添加 /api/anthropic', () => {

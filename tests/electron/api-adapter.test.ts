@@ -2,7 +2,7 @@
  * @author      Alan
  * @copyright   AGCPA v3.0
  * @created     2026-01-20
- * @updated     2026-01-21
+ * @updated     2026-01-24
  * @Email       None
  *
  * API 适配器单元测试
@@ -29,7 +29,7 @@ describe('getProviderDefaults', () => {
 
   it('应该返回 DeepSeek 的默认配置', () => {
     const defaults = getProviderDefaults('deepseek');
-    expect(defaults.baseURL).toBe('https://api.deepseek.com/anthropic');
+    expect(defaults.baseURL).toBe('https://api.deepseek.com');
     expect(defaults.models).toContain('deepseek-chat');
     expect(defaults.defaultModel).toBeDefined();
   });
@@ -48,24 +48,24 @@ describe('getProviderDefaults', () => {
     expect(defaults.defaultModel).toBeDefined();
   });
 
-  it('应该返回 Ollama 的默认配置', () => {
-    const defaults = getProviderDefaults('ollama');
-    expect(defaults.baseURL).toBe('http://localhost:11434');
-    expect(defaults.models).toContain('llama3');
+  it('应该返回七牛云的默认配置', () => {
+    const defaults = getProviderDefaults('qiniu');
+    expect(defaults.baseURL).toBe('https://api.qnaigc.com');
+    expect(defaults.models).toContain('qwen-plus');
     expect(defaults.defaultModel).toBeDefined();
   });
 
-  it('应该返回 OpenAI 的默认配置', () => {
-    const defaults = getProviderDefaults('openai');
-    expect(defaults.baseURL).toBe('https://api.openai.com');
-    expect(defaults.models).toContain('gpt-4o');
+  it('应该返回月之暗面的默认配置', () => {
+    const defaults = getProviderDefaults('moonshot');
+    expect(defaults.baseURL).toBe('https://api.moonshot.cn');
+    expect(defaults.models).toContain('moonshot-v1-128k');
     expect(defaults.defaultModel).toBeDefined();
   });
 
-  it('应该返回华为云的默认配置', () => {
-    const defaults = getProviderDefaults('huawei');
-    expect(defaults.baseURL).toBe('https://maas-model.cn-north-4.myhuaweicloud.com');
-    expect(defaults.models).toContain('glm-4');
+  it('应该返回 N1N.AI 的默认配置', () => {
+    const defaults = getProviderDefaults('n1n');
+    expect(defaults.baseURL).toBe('https://api.n1n.ai');
+    expect(defaults.models).toContain('claude-sonnet-4-20250514');
     expect(defaults.defaultModel).toBeDefined();
   });
 
@@ -77,9 +77,9 @@ describe('getProviderDefaults', () => {
   });
 
   it('所有提供商都应该有 baseURL', () => {
-    const providers: Array<'anthropic' | 'alibaba' | 'zhipu' | 'moonshot' | 'deepseek' | 'qiniu' | 'huawei' | 'ollama' | 'n1n' | 'minimax' | 'custom'> = [
-      'anthropic', 'alibaba', 'zhipu', 'moonshot', 'deepseek',
-      'qiniu', 'huawei', 'ollama', 'n1n', 'minimax', 'custom'
+    const providers: Array<'anthropic' | 'zhipu' | 'deepseek' | 'alibaba' | 'qiniu' | 'moonshot' | 'n1n' | 'minimax' | 'custom'> = [
+      'anthropic', 'zhipu', 'deepseek', 'alibaba',
+      'qiniu', 'moonshot', 'n1n', 'minimax', 'custom'
     ];
 
     providers.forEach(provider => {
@@ -90,9 +90,9 @@ describe('getProviderDefaults', () => {
   });
 
   it('所有提供商都应该有模型列表', () => {
-    const providers: Array<'anthropic' | 'alibaba' | 'zhipu' | 'moonshot' | 'deepseek' | 'qiniu' | 'huawei' | 'ollama' | 'n1n' | 'minimax' | 'custom'> = [
-      'anthropic', 'alibaba', 'zhipu', 'moonshot', 'deepseek',
-      'qiniu', 'huawei', 'ollama', 'n1n', 'minimax', 'custom'
+    const providers: Array<'anthropic' | 'zhipu' | 'deepseek' | 'alibaba' | 'qiniu' | 'moonshot' | 'n1n' | 'minimax' | 'custom'> = [
+      'anthropic', 'zhipu', 'deepseek', 'alibaba',
+      'qiniu', 'moonshot', 'n1n', 'minimax', 'custom'
     ];
 
     providers.forEach(provider => {
@@ -103,9 +103,9 @@ describe('getProviderDefaults', () => {
   });
 
   it('所有提供商都应该有默认模型', () => {
-    const providers: Array<'anthropic' | 'alibaba' | 'zhipu' | 'moonshot' | 'deepseek' | 'qiniu' | 'huawei' | 'ollama' | 'n1n' | 'minimax' | 'custom'> = [
-      'anthropic', 'alibaba', 'zhipu', 'moonshot', 'deepseek',
-      'qiniu', 'huawei', 'ollama', 'n1n', 'minimax', 'custom'
+    const providers: Array<'anthropic' | 'zhipu' | 'deepseek' | 'alibaba' | 'qiniu' | 'moonshot' | 'n1n' | 'minimax' | 'custom'> = [
+      'anthropic', 'zhipu', 'deepseek', 'alibaba',
+      'qiniu', 'moonshot', 'n1n', 'minimax', 'custom'
     ];
 
     providers.forEach(provider => {

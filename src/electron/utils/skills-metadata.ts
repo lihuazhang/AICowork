@@ -1,12 +1,84 @@
 /**
  * 技能元数据存储 - 存储用户的备注和标签
  * 不修改原始技能文件，元数据独立存储
+ * @author Alan
+ * @copyright AGCPA v3.0
+ * @updated 2025-01-24 (添加内存缓存机制)
  */
 
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { log } from '../logger.js';
+
+/**
+ * 缓存配置
+ */
+const CACHE_TTL = 30000; // 30秒缓存
+const MAX_CACHE_SIZE = 100; // 最大缓存条目数
+
+/**
+ * 内存缓存
+ */
+interface CacheEntry {
+  data: MetadataStore;
+  timestamp: number;
+}
+
+const metadataCache = new Map<string, CacheEntry>();
+
+/**
+ * 清理过期缓存
+ */
+function cleanupCache(): void {
+  const now = Date.now();
+  for (const [key, entry] of metadataCache.entries()) {
+    if (now - entry.timestamp > CACHE_TTL) {
+      metadataCache.delete(key);
+    }
+  }
+
+  // 如果缓存仍然过大，删除最旧的条目
+  if (metadataCache.size > MAX_CACHE_SIZE) {
+    const entries = Array.from(metadataCache.entries());
+    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+    const toDelete = entries.slice(0, Math.floor(MAX_CACHE_SIZE * 0.3));
+    for (const [key] of toDelete) {
+      metadataCache.delete(key);
+    }
+  }
+}
+
+/**
+ * 从缓存获取数据
+ */
+function getFromCache(): MetadataStore | null {
+  const cacheKey = 'metadata-store';
+  const entry = metadataCache.get(cacheKey);
+  if (entry && (Date.now() - entry.timestamp < CACHE_TTL)) {
+    return entry.data;
+  }
+  return null;
+}
+
+/**
+ * 设置缓存
+ */
+function setCache(data: MetadataStore): void {
+  cleanupCache();
+  metadataCache.set('metadata-store', {
+    data,
+    timestamp: Date.now(),
+  });
+}
+
+/**
+ * 清除缓存（在数据更新时调用）
+ */
+export function clearMetadataCache(): void {
+  metadataCache.clear();
+  log.debug('[skills-metadata] Cache cleared');
+}
 
 /**
  * 技能标签
@@ -42,26 +114,39 @@ function getMetadataFilePath(): string {
 }
 
 /**
- * 读取元数据存储
+ * 读取元数据存储（带缓存）
  */
 async function readMetadataStore(): Promise<MetadataStore> {
+  // 先检查缓存
+  const cached = getFromCache();
+  if (cached) {
+    return cached;
+  }
+
   try {
     const filePath = getMetadataFilePath();
     await fs.access(filePath);
     const content = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(content);
+    const store = JSON.parse(content);
+    // 更新缓存
+    setCache(store);
+    return store;
   } catch {
     // 文件不存在或读取失败，返回空存储
-    return { tags: {}, skills: {} };
+    const emptyStore = { tags: {}, skills: {} };
+    setCache(emptyStore);
+    return emptyStore;
   }
 }
 
 /**
- * 写入元数据存储
+ * 写入元数据存储（写入后更新缓存）
  */
 async function writeMetadataStore(store: MetadataStore): Promise<void> {
   const filePath = getMetadataFilePath();
   await fs.writeFile(filePath, JSON.stringify(store, null, 2), 'utf-8');
+  // 更新缓存
+  setCache(store);
 }
 
 /**

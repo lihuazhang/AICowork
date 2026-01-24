@@ -92,6 +92,7 @@ function setupSecurityHeaders(): void {
 
 /**
  * 设置全局快捷键
+ * 包括开发者工具快捷键，确保在生产环境也能方便调试
  */
 function setupShortcuts(): void {
     // Cmd/Ctrl+Q 退出应用
@@ -103,15 +104,76 @@ function setupShortcuts(): void {
         });
     });
 
-    // F12 打开开发者工具
+    // F12 打开开发者工具（标准快捷键）
     globalShortcut.register('F12', () => {
         mainWindow?.webContents.openDevTools();
     });
 
-    // Cmd/Ctrl+Shift+I 打开开发者工具
+    // Cmd/Ctrl+Shift+I 打开开发者工具（Chrome风格）
     globalShortcut.register('CommandOrControl+Shift+I', () => {
         mainWindow?.webContents.openDevTools();
     });
+
+    // Cmd/Ctrl+Shift+D 切换开发者工具（快速开关）
+    globalShortcut.register('CommandOrControl+Shift+D', () => {
+        if (!mainWindow) return;
+        const contents = mainWindow.webContents;
+        if (contents.isDevToolsOpened()) {
+            contents.closeDevTools();
+        } else {
+            contents.openDevTools({ mode: 'bottom' });
+        }
+    });
+
+    // Cmd/Ctrl+Option+I (Mac) 或 Cmd/Ctrl+Alt+I (Windows/Linux) 打开开发者工具
+    globalShortcut.register('CommandOrControl+Alt+I', () => {
+        mainWindow?.webContents.openDevTools();
+    });
+
+    // Cmd/Ctrl+Shift+C 打开控制台（直接聚焦控制台）
+    globalShortcut.register('CommandOrControl+Shift+C', () => {
+        if (!mainWindow) return;
+        const contents = mainWindow.webContents;
+        if (!contents.isDevToolsOpened()) {
+            contents.openDevTools({ mode: 'bottom' });
+        }
+        // 聚焦到控制台（需要在开发者工具打开后执行）
+        contents.executeJavaScript('if (window.__focusConsole) window.__focusConsole()');
+    });
+
+    // F5 刷新页面（开发模式下重新加载）
+    globalShortcut.register('F5', () => {
+        if (isDev() && mainWindow) {
+            mainWindow.reload();
+        }
+    });
+
+    // Cmd/Ctrl+R 刷新页面（开发模式下重新加载）
+    globalShortcut.register('CommandOrControl+R', () => {
+        if (isDev() && mainWindow) {
+            mainWindow.reload();
+        }
+    });
+
+    // Cmd/Ctrl+Shift+R 强制刷新（清除缓存）
+    globalShortcut.register('CommandOrControl+Shift+R', () => {
+        if (isDev() && mainWindow) {
+            mainWindow.webContents.reloadIgnoringCache();
+        }
+    });
+
+    // 记录快捷键注册日志（仅在开发模式）
+    if (isDev()) {
+        console.log('[Shortcuts] Registered shortcuts:');
+        console.log('  F12: Open DevTools');
+        console.log('  Cmd/Ctrl+Shift+I: Open DevTools');
+        console.log('  Cmd/Ctrl+Shift+D: Toggle DevTools');
+        console.log('  Cmd/Ctrl+Alt+I: Open DevTools');
+        console.log('  Cmd/Ctrl+Shift+C: Open Console');
+        console.log('  F5: Reload (dev only)');
+        console.log('  Cmd/Ctrl+R: Reload (dev only)');
+        console.log('  Cmd/Ctrl+Shift+R: Hard Reload (dev only)');
+    }
 }
 
 /**

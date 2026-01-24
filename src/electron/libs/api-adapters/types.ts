@@ -111,20 +111,6 @@ export interface AnthropicResponse {
   };
 }
 
-/**
- * API 转换器接口
- */
-export interface ApiAdapter {
-  /** 将 Anthropic 请求转换为厂商特定格式 */
-  transformRequest(request: AnthropicRequest, config: ApiConfig): {
-    url: string;
-    headers: Record<string, string>;
-    body: unknown;
-  };
-
-  /** 将厂商响应转换为 Anthropic 格式 */
-  transformResponse(response: unknown, config: ApiConfig): AnthropicResponse;
-
-  /** 获取流式响应转换器 */
-  transformStream?(chunk: string, config: ApiConfig): string | null;
-}
+// ===== 已删除：ApiAdapter 接口（未使用，SDK 直接处理 API 调用） =====
+// 之前定义的 ApiAdapter 接口及其相关方法（transformRequest, transformResponse, transformStream）
+// 已被移除，因为 Claude Agent SDK 原生处理所有 API 调用，无需适配器层。

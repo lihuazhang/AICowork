@@ -140,21 +140,33 @@ code, pre, textarea.mono, input.mono {
 }
 
 /* 记忆状态图标颜色 - 针对 stroke 图标 */
+.text-error {
+  color: var(--color-error);
+}
 .text-error svg,
 .text-error svg * {
   stroke: var(--color-error) !important;
 }
 
+.text-success {
+  color: var(--color-success);
+}
 .text-success svg,
 .text-success svg * {
   stroke: var(--color-success) !important;
 }
 
+.text-info {
+  color: var(--color-info);
+}
 .text-info svg,
 .text-info svg * {
   stroke: var(--color-info) !important;
 }
 
+.text-muted-light {
+  color: var(--color-muted-light);
+}
 .text-muted-light svg,
 .text-muted-light svg * {
   stroke: var(--color-muted-light) !important;
