@@ -30,9 +30,8 @@ function detectProviderType(baseURL: string): 'anthropic' | 'openai' {
   const openaiProviders = [
     'api.deepseek.com',
     'api.openai.com',
-    'api.moonshot.cn',
-    'dashscope.aliyuncs.com/compatible-mode', // 阿里云百炼
     'antchat.alipay.com', // 矽塔（蚂蚁聊天）
+    'idealab.alibaba-inc.com', // IdeaLab
   ];
   
   for (const provider of openaiProviders) {

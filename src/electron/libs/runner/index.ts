@@ -247,15 +247,12 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
       // ⚡ 渐进式加载优化：不自动注入记忆上下文
       // AI 可以通过 Memory MCP 工具主动检索记忆
       // 记忆工具会自动出现在工具列表中，AI 可以自然发现并使用
-      // 对于阿里云，不使用 CLI 进程模式，避免兼容性问题
-      claudeCodePath = (config.apiType === 'alibaba') ? undefined : getQwenCodePath();
+      // 获取 CLI 路径
+      claudeCodePath = getQwenCodePath();
 
       log.info(`[Runner] CLI mode: ${claudeCodePath ? 'enabled' : 'disabled (HTTP API mode)'} for provider: ${config.apiType}`);
 
-      // 验证阿里云配置
-      if (config.apiType === 'alibaba') {
-        log.info('[Runner] Using Alibaba cloud API mode - CLI disabled by design');
-      } else if (!claudeCodePath) {
+      if (!claudeCodePath) {
         log.warn('[Runner] CLI path not found, falling back to HTTP API mode');
       }
 
@@ -431,9 +428,8 @@ function detectProviderType(baseURL: string): 'anthropic' | 'openai' {
   const openaiProviders = [
     'api.deepseek.com',
     'api.openai.com',
-    'api.moonshot.cn',
-    'dashscope.aliyuncs.com/compatible-mode', // 阿里云百炼
     'antchat.alipay.com', // 矽塔（蚂蚁聊天）
+    'idealab.alibaba-inc.com', // IdeaLab
   ];
   
   for (const provider of openaiProviders) {

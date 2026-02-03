@@ -273,14 +273,11 @@ export function ApiSection() {
       // OpenAI 规范
       'xita': 'openai',
       'deepseek': 'openai',
-      'moonshot': 'openai',
-      'alibaba': 'openai',
+      'idealab': 'openai',
       
       // Anthropic 规范
       'anthropic': 'anthropic',
       'zhipu': 'anthropic',
-      'qiniu': 'anthropic',
-      'n1n': 'anthropic',
       'minimax': 'anthropic',
       
       // Gemini 规范

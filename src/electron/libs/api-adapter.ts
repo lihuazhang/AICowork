@@ -35,7 +35,7 @@ const providerDefaultsCache = new Map<ApiProvider, {
  * 所有厂商都与 Claude Agent SDK 原生兼容
  */
 const RECOMMENDED_PROVIDERS: Set<ApiProvider> = new Set([
-  'anthropic', 'zhipu', 'deepseek', 'alibaba', 'qiniu', 'moonshot', 'n1n', 'minimax', 'xita', 'custom'
+  'anthropic', 'zhipu', 'deepseek', 'minimax', 'xita', 'idealab', 'custom'
 ]);
 
 /**
@@ -60,26 +60,6 @@ const PROVIDER_DEFAULTS: Record<ApiProvider, { baseURL: string; models: string[]
     models: ['deepseek-chat', 'deepseek-coder', 'deepseek-reasoner'],
     defaultModel: 'deepseek-chat',
   },
-  alibaba: {
-    baseURL: 'https://dashscope.aliyuncs.com/apps/anthropic',
-    models: ['qwen-turbo', 'qwen-plus', 'qwen-max', 'qwen-max-longcontext'],
-    defaultModel: 'qwen-plus',
-  },
-  qiniu: {
-    baseURL: 'https://api.qnaigc.com',
-    models: ['qwen-plus', 'deepseek-chat', 'glm-4', 'claude-3-5-sonnet-20241022'],
-    defaultModel: 'qwen-plus',
-  },
-  moonshot: {
-    baseURL: 'https://api.moonshot.cn/anthropic',
-    models: ['kimi-k2-turbo-preview', 'kimi-k2-0905','moonshot-v1-128k', 'moonshot-v1-32k', 'moonshot-v1-8k'],
-    defaultModel: 'kimi-k2-turbo-preview',
-  },
-  n1n: {
-    baseURL: 'https://api.n1n.ai',
-    models: ['claude-sonnet-4-20250514', 'gpt-4o', 'glm-4'],
-    defaultModel: 'claude-sonnet-4-20250514',
-  },
   minimax: {
     baseURL: 'https://api.minimaxi.com/anthropic',
     models: ['MiniMax-M2.1', 'MiniMax-M2.1-lightning', 'MiniMax-M2'],
@@ -89,6 +69,11 @@ const PROVIDER_DEFAULTS: Record<ApiProvider, { baseURL: string; models: string[]
     baseURL: 'https://antchat.alipay.com',
     models: ['DeepSeek-R1', 'DeepSeek-V3', 'claude-sonnet-4-20250514', 'gpt-4o'],
     defaultModel: 'DeepSeek-R1',
+  },
+  idealab: {
+    baseURL: 'https://idealab.alibaba-inc.com/api/openai/v1/chat/completions',
+    models: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+    defaultModel: 'gpt-4o',
   },
   // 自定义
   custom: {

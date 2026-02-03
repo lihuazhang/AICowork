@@ -115,13 +115,11 @@ export function inferProviderFromUrl(baseURL: string): ApiProvider | null {
   // 厂商域名映射
   const domainProviders: Array<{ pattern: RegExp; provider: ApiProvider }> = [
     { pattern: /anthropic\.com/, provider: 'anthropic' },
-    { pattern: /aliyuncs\.com/, provider: 'alibaba' },
     { pattern: /bigmodel\.cn/, provider: 'zhipu' },
-    { pattern: /moonshot\.cn/, provider: 'moonshot' },
     { pattern: /deepseek\.(com|cn)/, provider: 'deepseek' },
-    { pattern: /qnaigc\.com/, provider: 'qiniu' },
-    { pattern: /n1n\.ai/, provider: 'n1n' },
     { pattern: /minimax/i, provider: 'minimax' },
+    { pattern: /antchat\.alipay\.com/, provider: 'xita' },
+    { pattern: /idealab\.alibaba-inc\.com/, provider: 'idealab' },
   ];
 
   // 按域名匹配
@@ -183,22 +181,22 @@ export function getAllPresetUrls(): Array<{ provider: string; name: string; url:
       description: 'DeepSeek API 端点'
     },
     {
-      provider: 'alibaba',
-      name: '阿里云百炼',
-      url: 'https://dashscope.aliyuncs.com',
-      description: '阿里云百炼 API 端点'
+      provider: 'xita',
+      name: '矽塔 (AntChat)',
+      url: 'https://antchat.alipay.com',
+      description: '矽塔 AntChat API 端点'
     },
     {
-      provider: 'moonshot',
-      name: '月之暗面 (Kimi)',
-      url: 'https://api.moonshot.cn/anthropic',
-      description: '月之暗面 Kimi API 端点'
+      provider: 'idealab',
+      name: 'IdeaLab',
+      url: 'https://idealab.alibaba-inc.com',
+      description: 'IdeaLab API 端点'
     },
     {
-      provider: 'n1n',
-      name: 'N1N.AI',
-      url: 'https://api.n1n.ai',
-      description: 'N1N.AI API 端点'
+      provider: 'minimax',
+      name: 'MiniMax',
+      url: 'https://api.minimax.chat',
+      description: 'MiniMax API 端点'
     },
   ];
 }

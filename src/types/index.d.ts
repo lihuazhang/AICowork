@@ -16,14 +16,15 @@ type ApiProvider =
     | 'anthropic'
     | 'openai'
     | 'azure'
-    | 'alibaba'
     | 'baidu'
     | 'zhipu'
-    | 'moonshot'
     | 'deepseek'
     | 'groq'
     | 'together'
     | 'gemini'
+    | 'minimax'
+    | 'xita'
+    | 'idealab'
     | 'custom';
 
 type ApiConfig = {

@@ -116,10 +116,7 @@ const API_KEY_PATTERNS: Partial<Record<ApiProvider, RegExp[]>> = {
   anthropic: [/^sk-ant-[a-zA-Z0-9_-]{91,}$/],
   zhipu: [/^[0-9a-f]{32}\.[0-9a-f]{8}\.[0-9a-f]{8}$/],
   deepseek: [/^sk-[a-zA-Z0-9-]{51,}$/],
-  alibaba: [/^sk-[a-zA-Z0-9]{48,}$/],
-  moonshot: [/^sk-[a-zA-Z0-9]{43,}$/],
-  qiniu: [/^sk-[a-zA-Z0-9]{32,}$/],
-  n1n: [/^sk-[a-zA-Z0-9]{32,}$/],
+  idealab: [/^sk-[a-zA-Z0-9]{32,}$/],
   minimax: [/^.{20,}$/],
   custom: [/^.{20,}$/],
 };
@@ -310,8 +307,7 @@ export function validateApiConfig(config: ApiConfig): ValidationResult {
 
   // 验证 apiType（只验证是否在支持的厂商列表中）
   const validProviders: ApiProvider[] = [
-    'anthropic', 'zhipu', 'deepseek', 'alibaba',
-    'qiniu', 'moonshot', 'n1n', 'minimax', 'xita', 'custom',
+    'anthropic', 'zhipu', 'deepseek', 'minimax', 'xita', 'idealab', 'custom',
   ];
 
   if (!validProviders.includes(config.apiType as ApiProvider)) {
@@ -349,7 +345,7 @@ function normalizeBaseURL(baseURL: string, apiType: ApiType): string {
     }> = [
       {
         hostPattern: /dashscope\.aliyuncs\.com/,
-        apiTypes: ['alibaba'],
+        apiTypes: ['idealab'],
         oldPathPrefix: '/compatible-mode',
         newPathPrefix: '/apps/anthropic',
         stripSuffix: '/v1',  // 移除 /v1 后缀，避免与适配器路径冲突
@@ -421,11 +417,9 @@ function inferApiTypeFromBaseURL(baseURL: string): ApiType {
 
     // 根据域名推断厂商
     const domainMap: Record<string, ApiType> = {
-      'dashscope.aliyuncs.com': 'alibaba',
-      'api.moonshot.cn': 'moonshot',
       'open.bigmodel.cn': 'zhipu',
       'api.deepseek.com': 'deepseek',
-      'api.qiniu.com': 'qiniu',
+      'idealab.alibaba-inc.com': 'idealab',
       'api.minimax.chat': 'minimax',
     };
 
@@ -443,14 +437,6 @@ function inferApiTypeFromBaseURL(baseURL: string): ApiType {
 
     // 检查路径特征（阿里云兼容模式路径）
     const pathname = url.pathname.toLowerCase();
-    if (pathname.includes('/compatible-mode')) {
-      // 有兼容模式路径，可能是 alibaba
-      // 优先根据域名判断
-      if (hostname.includes('aliyun') || hostname.includes('dashscope')) {
-        return 'alibaba';
-      }
-    }
-
     // 默认返回 custom（而不是 anthropic，让适配器系统自动处理）
     return 'custom';
   } catch {
@@ -813,8 +799,7 @@ export async function fetchModelLimits(config: ApiConfig): Promise<ApiConfig['mo
     const isOpenAICompatible = config.baseURL.toLowerCase().includes('antchat.alipay.com') ||
                                config.baseURL.toLowerCase().includes('api.deepseek.com') ||
                                config.baseURL.toLowerCase().includes('api.openai.com') ||
-                               config.baseURL.toLowerCase().includes('api.moonshot.cn') ||
-                               config.baseURL.toLowerCase().includes('dashscope.aliyuncs.com/compatible-mode');
+                               config.baseURL.toLowerCase().includes('idealab.alibaba-inc.com');
     
     const headers = isOpenAICompatible
       ? {
@@ -986,6 +971,12 @@ export function getSupportedProviders(): Array<{
       icon: '🏔️',
     },
     {
+      id: 'idealab',
+      name: 'IdeaLab',
+      description: 'IdeaLab - 阿里内部 AI 实验室，OpenAI 兼容格式',
+      icon: '💡',
+    },
+    {
       id: 'anthropic',
       name: 'Anthropic (Claude)',
       description: '官方 Anthropic API，支持 Claude 系列模型',
@@ -1002,30 +993,6 @@ export function getSupportedProviders(): Array<{
       name: 'DeepSeek',
       description: 'DeepSeek - 提供 Anthropic 兼容端点',
       icon: '🔍',
-    },
-    {
-      id: 'alibaba',
-      name: '阿里云 (通义千问)',
-      description: '阿里云 - 提供 Anthropic 兼容端点',
-      icon: '☁️',
-    },
-    {
-      id: 'qiniu',
-      name: '七牛云 (AI大模型)',
-      description: '七牛云 - 支持 50+ 模型，兼容 Anthropic 格式',
-      icon: '🐮',
-    },
-    {
-      id: 'moonshot',
-      name: '月之暗面 (Kimi)',
-      description: '月之暗面 - 提供 Anthropic 兼容端点',
-      icon: '🌙',
-    },
-    {
-      id: 'n1n',
-      name: 'N1N.AI',
-      description: 'N1N.AI - 国内合规专线，支持 Anthropic 格式',
-      icon: '🚀',
     },
     {
       id: 'minimax',
@@ -1067,12 +1034,9 @@ function getProviderDescription(provider: ApiProvider): string {
     anthropic: '官方 Anthropic API，支持 Claude Sonnet、Haiku、Opus 等模型',
     zhipu: '智谱 AI ChatGLM - Anthropic 兼容端点，支持 GLM-4、GLM-3-Turbo、Flash 等',
     deepseek: 'DeepSeek - Anthropic 兼容端点，支持 DeepSeek Chat、DeepSeek Coder',
-    alibaba: '阿里云百炼 - Anthropic 兼容端点，支持 Qwen Turbo、Plus、Max 等模型',
-    qiniu: '七牛云 AI 大模型，支持 50+ 主流模型，兼容 Anthropic 格式',
-    moonshot: '月之暗面 Kimi - Anthropic 兼容端点，支持 128K、32K、8K 等长文本模型',
-    n1n: 'N1N.AI 国内合规专线，支持 Anthropic 格式',
     minimax: 'MiniMax - Anthropic 兼容端点，支持 MiniMax-M2.1 等模型',
     xita: '矽塔 AntChat - Anthropic 兼容端点，支持 DeepSeek-R1、Claude、GPT-4o 等模型',
+    idealab: 'IdeaLab - 阿里内部 AI 实验室，OpenAI 兼容格式，支持 GPT-4o 等模型',
     custom: '自定义 API，需兼容 Anthropic 格式',
   };
 

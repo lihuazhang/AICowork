@@ -81,7 +81,7 @@ export type SessionStatus = (typeof SESSION_STATUS)[keyof typeof SESSION_STATUS]
  * 只包含与 Anthropic SDK 原生兼容的厂商
  *
  * @author Alan
- * @updated 2025-01-24 (精简为只保留兼容厂商)
+ * @updated 2025-02-03 (删除阿里云、七牛云、月之暗面、N1N.AI，新增 IdeaLab)
  */
 export type ApiProvider =
   // Anthropic 官方
@@ -89,12 +89,9 @@ export type ApiProvider =
   // 国内厂商 - Anthropic 兼容格式（推荐）
   | 'zhipu'            // 智谱 AI (GLM)
   | 'deepseek'         // DeepSeek
-  | 'alibaba'          // 阿里云 (通义千问)
-  | 'qiniu'            // 七牛云 AI
-  | 'moonshot'         // 月之暗面 (Kimi)
-  | 'n1n'              // N1N.AI
   | 'minimax'          // MiniMax
   | 'xita'             // 矽塔 (AntChat)
+  | 'idealab'          // IdeaLab (OpenAI 格式)
   // 自定义（用户自行负责兼容性）
   | 'custom';          // 自定义 Anthropic 兼容 API
 
@@ -105,7 +102,7 @@ export type ApiProvider =
  * 所有保留的厂商都与 SDK 原生兼容
  *
  * @author Alan
- * @updated 2025-01-24 (精简为只保留兼容厂商)
+ * @updated 2025-02-03 (删除阿里云、七牛云、月之暗面、N1N.AI，新增 IdeaLab)
  */
 export const PROVIDER_COMPATIBILITY: Record<ApiProvider, {
   /** API 格式类型 */
@@ -121,12 +118,9 @@ export const PROVIDER_COMPATIBILITY: Record<ApiProvider, {
   // 国内厂商 - Anthropic 兼容格式（推荐）
   zhipu: { format: 'anthropic', recommended: true, note: '智谱 AI Anthropic 兼容端点' },
   deepseek: { format: 'anthropic', recommended: true, note: 'DeepSeek Anthropic 兼容端点' },
-  alibaba: { format: 'anthropic', recommended: true, note: '阿里云百炼 Anthropic 兼容端点' },
-  qiniu: { format: 'anthropic', recommended: true, note: '七牛云 AI Anthropic 兼容端点' },
-  moonshot: { format: 'anthropic', recommended: true, note: '月之暗面 Anthropic 兼容端点' },
   minimax: { format: 'anthropic', recommended: true, note: 'MiniMax Anthropic 兼容端点' },
-  n1n: { format: 'anthropic', recommended: true, note: 'N1N.AI Anthropic 兼容端点' },
   xita: { format: 'anthropic', recommended: true, note: '矽塔 AntChat Anthropic 兼容端点' },
+  idealab: { format: 'anthropic', recommended: true, note: 'IdeaLab OpenAI 兼容端点' },
 
   // 自定义（用户自行负责兼容性）
   custom: { format: 'anthropic', recommended: true, note: '自定义 Anthropic 兼容端点' },
