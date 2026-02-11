@@ -71,9 +71,9 @@ const PROVIDER_DEFAULTS: Record<ApiProvider, { baseURL: string; models: string[]
     defaultModel: 'DeepSeek-R1',
   },
   idealab: {
-    baseURL: 'https://idealab.alibaba-inc.com/api/openai/v1/chat/completions',
-    models: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-    defaultModel: 'gpt-4o',
+    baseURL: 'https://idealab.alibaba-inc.com/api/openai/v1',
+    models: ['qwen3-coder-plus', 'gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+    defaultModel: 'qwen3-coder-plus',
   },
   // 自定义
   custom: {

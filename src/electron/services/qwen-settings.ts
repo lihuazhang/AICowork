@@ -205,14 +205,26 @@ export function getCurrentApiConfig(): ApiConfig | null {
 export function buildEnvForConfig(config: ApiConfig): Record<string, string> {
   const baseEnv = { ...process.env } as Record<string, string>;
 
+  // ✅ 修复：移除 baseURL 中的 /chat/completions 或 /messages 后缀
+  // SDK 会自动拼接这个路径，如果 baseURL 已包含则会导致重复请求 404
+  let normalizedBaseURL = config.baseURL.replace(/\/+$/, ''); // 先移除尾部斜杠
+  if (normalizedBaseURL.endsWith('/chat/completions')) {
+    normalizedBaseURL = normalizedBaseURL.replace(/\/chat\/completions$/, '');
+    log.info(`[qwen-settings] Normalized baseURL: removed /chat/completions suffix`);
+  }
+  if (normalizedBaseURL.endsWith('/messages')) {
+    normalizedBaseURL = normalizedBaseURL.replace(/\/messages$/, '');
+    log.info(`[qwen-settings] Normalized baseURL: removed /messages suffix`);
+  }
+
   // Qwen SDK 使用 OpenAI 兼容的环境变量
   baseEnv.OPENAI_API_KEY = config.apiKey;
-  baseEnv.OPENAI_BASE_URL = config.baseURL;
+  baseEnv.OPENAI_BASE_URL = normalizedBaseURL;
   baseEnv.OPENAI_MODEL = config.model;
   
   // 同时保留 ANTHROPIC_* 格式（用于 .env 文件兼容）
   baseEnv.ANTHROPIC_AUTH_TOKEN = config.apiKey;
-  baseEnv.ANTHROPIC_BASE_URL = config.baseURL;
+  baseEnv.ANTHROPIC_BASE_URL = normalizedBaseURL;
   baseEnv.ANTHROPIC_MODEL = config.model;
   if (config.apiType) {
     baseEnv.ANTHROPIC_API_TYPE = config.apiType;

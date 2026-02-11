@@ -287,9 +287,49 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
       let messageCount = 0;
       for await (const message of q) {
         messageCount++;
-        if (messageCount === 1 || messageCount % 10 === 0) {
-          log.debug(`[Runner] Received message ${messageCount} of type: ${message.type}`);
+        
+        // ========== 详细的消息日志记录 ==========
+        // 记录每条消息的类型和关键信息
+        log.info(`[Runner] Message #${messageCount}: type=${message.type}, subtype=${'subtype' in message ? (message as any).subtype : 'N/A'}`);
+        
+        // 对于前几条消息，记录完整内容以便调试
+        if (messageCount <= 5) {
+          try {
+            const messagePreview = JSON.stringify(message, null, 2);
+            // 限制日志长度，避免过长
+            const truncated = messagePreview.length > 2000 
+              ? messagePreview.substring(0, 2000) + '... [truncated]' 
+              : messagePreview;
+            log.info(`[Runner] Message #${messageCount} content: ${truncated}`);
+          } catch {
+            log.info(`[Runner] Message #${messageCount} content: [unable to serialize]`);
+          }
         }
+        
+        // 检测错误消息并记录详细信息
+        if (message.type === "result" && 'subtype' in message && (message as any).subtype !== "success") {
+          log.error('========================================');
+          log.error('=== SDK Error Response ===');
+          log.error(`Session ID: ${session.id}`);
+          log.error(`Message Type: ${message.type}`);
+          log.error(`Subtype: ${(message as any).subtype}`);
+          log.error(`Full Message: ${JSON.stringify(message, null, 2)}`);
+          
+          // 记录请求信息以便调试
+          if (config) {
+            const apiEndpoint = buildApiEndpoint(config);
+            const requestHeaders = buildApiHeaders(config);
+            const requestBody = buildApiRequestBody(config, prompt);
+            
+            log.error('--- Request Info ---');
+            log.error(`Request URL: ${apiEndpoint}`);
+            log.error(`Request Headers: ${JSON.stringify(requestHeaders, null, 2)}`);
+            log.error(`Request Body: ${JSON.stringify(requestBody, null, 2)}`);
+          }
+          log.error('========================================');
+        }
+        // ========== 结束：消息日志记录 ==========
+        
         // 提取 session_id 并附加实际配置的模型名称
         if (message.type === "system" && "subtype" in message && message.subtype === "init") {
           const sdkSessionId = message.session_id;
@@ -344,13 +384,54 @@ export async function runClaude(options: RunnerOptions): Promise<RunnerHandle> {
         log.info(`[Runner] Session ${session.id} aborted by user`);
         return;
       }
-      // 详细的错误日志记录
+      
+      // ========== 增强的错误日志记录 ==========
+      log.error('========================================');
+      log.error('=== API Error Details ===');
+      log.error(`Session ID: ${session.id}`);
+      log.error(`Error Name: ${errorName}`);
+      log.error(`Error Message: ${(error as Error).message}`);
+      
+      // 记录 API 请求信息（用于调试 404 等错误）
+      if (config) {
+        const apiEndpoint = buildApiEndpoint(config);
+        const requestHeaders = buildApiHeaders(config);
+        const requestBody = buildApiRequestBody(config, prompt);
+        
+        log.error('--- Request Info ---');
+        log.error(`Request URL: ${apiEndpoint}`);
+        log.error(`Request Method: POST`);
+        log.error(`Request Headers: ${JSON.stringify(requestHeaders, null, 2)}`);
+        log.error(`Request Body: ${JSON.stringify(requestBody, null, 2)}`);
+      }
+      
+      // 尝试提取更多错误信息（如 HTTP 状态码、响应体等）
+      const errorObj = error as any;
+      if (errorObj.status || errorObj.statusCode) {
+        log.error(`HTTP Status: ${errorObj.status || errorObj.statusCode}`);
+      }
+      if (errorObj.response) {
+        log.error(`Response: ${JSON.stringify(errorObj.response, null, 2)}`);
+      }
+      if (errorObj.body) {
+        log.error(`Response Body: ${typeof errorObj.body === 'string' ? errorObj.body : JSON.stringify(errorObj.body, null, 2)}`);
+      }
+      if (errorObj.cause) {
+        log.error(`Error Cause: ${JSON.stringify(errorObj.cause, null, 2)}`);
+      }
+      
+      log.error(`Stack Trace: ${(error as Error).stack}`);
+      log.error('========================================');
+      
+      // 详细的错误日志记录（保留原有格式）
       const errorDetails = {
         name: errorName,
         message: (error as Error).message,
         stack: (error as Error).stack,
         sessionId: session.id,
         apiType: config?.apiType,
+        baseURL: config?.baseURL,
+        model: config?.model,
         claudeCodePath: claudeCodePath ?? 'undefined (HTTP API mode)',
       };
       log.error(`[Runner] Error in session ${session.id}:`, errorDetails);
