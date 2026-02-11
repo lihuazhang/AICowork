@@ -32,6 +32,7 @@ function detectProviderType(baseURL: string): 'anthropic' | 'openai' {
     'api.openai.com',
     'antchat.alipay.com', // 矽塔（蚂蚁聊天）
     'idealab.alibaba-inc.com', // IdeaLab
+    'dashscope.aliyuncs.com', // 阿里云百炼
   ];
   
   for (const provider of openaiProviders) {

@@ -785,10 +785,26 @@ export async function fetchModelLimits(config: ApiConfig): Promise<ApiConfig['mo
 
     // 尝试发送一个最小化的测试请求
     // 使用非常小的 max_tokens 值来避免超出限制
-    // 检查 baseURL 是否已经包含完整路径（包含 /anthropic 或 /v1）
-    // 如果包含，则直接使用 baseURL；否则拼接 /v1/messages
-    const hasFullPath = /\/(anthropic|v1)(\/|$)/.test(config.baseURL);
-    const testUrl = hasFullPath ? config.baseURL : `${config.baseURL}/v1/messages`;
+    // 根据厂商类型和 URL 格式构建测试端点
+    const baseUrl = config.baseURL.replace(/\/+$/, '');
+    const endsWithV1 = /\/v1\/?$/.test(baseUrl);
+    const isOpenAICompatible = baseUrl.toLowerCase().includes('antchat.alipay.com') ||
+                               baseUrl.toLowerCase().includes('api.deepseek.com') ||
+                               baseUrl.toLowerCase().includes('api.openai.com') ||
+                               baseUrl.toLowerCase().includes('idealab.alibaba-inc.com') ||
+                               baseUrl.toLowerCase().includes('dashscope.aliyuncs.com');
+
+    let testUrl: string;
+    if (/\/chat\/completions\/?$/.test(baseUrl) || /\/messages\/?$/.test(baseUrl)) {
+      // URL 已包含完整端点路径（如 idealab），直接使用
+      testUrl = baseUrl;
+    } else if (isOpenAICompatible) {
+      // OpenAI 兼容格式：/v1/chat/completions
+      testUrl = endsWithV1 ? `${baseUrl}/chat/completions` : `${baseUrl}/v1/chat/completions`;
+    } else {
+      // Anthropic 格式：/v1/messages
+      testUrl = endsWithV1 ? `${baseUrl}/messages` : `${baseUrl}/v1/messages`;
+    }
     const testBody = {
       model: config.model,
       max_tokens: 1,  // 使用最小值测试
@@ -796,11 +812,6 @@ export async function fetchModelLimits(config: ApiConfig): Promise<ApiConfig['mo
     };
 
     // 根据厂商类型构建请求头
-    const isOpenAICompatible = config.baseURL.toLowerCase().includes('antchat.alipay.com') ||
-                               config.baseURL.toLowerCase().includes('api.deepseek.com') ||
-                               config.baseURL.toLowerCase().includes('api.openai.com') ||
-                               config.baseURL.toLowerCase().includes('idealab.alibaba-inc.com');
-    
     const headers = isOpenAICompatible
       ? {
           'Content-Type': 'application/json',
@@ -892,17 +903,20 @@ export async function fetchModelList(config: ApiConfig): Promise<string[] | null
     });
 
     // 检查 baseURL 是否已经包含完整路径
-    // 包含 /anthropic 或 compatible-mode/v1 的厂商通常不提供 /v1/models 端点
+    // 包含 /anthropic、compatible-mode/v1 或完整端点的厂商通常不提供 /v1/models 端点
     const hasFullPath = /\/(anthropic|compatible-mode\/v1)(\/|$)/.test(config.baseURL);
+    const isCompleteEndpoint = /\/(chat\/completions|messages)\/?$/.test(config.baseURL);
 
-    if (hasFullPath) {
+    if (hasFullPath || isCompleteEndpoint) {
       log.info('[config-store] Base URL 已包含完整路径，使用预定义模型列表');
       const providerDefaults = getProviderDefaults(config.apiType || 'custom');
       return providerDefaults.models;
     }
 
     // 1. 首先尝试从 /v1/models 端点获取（OpenAI 兼容格式）
-    const modelsUrl = `${config.baseURL}/v1/models`;
+    // 如果 baseURL 已经以 /v1 结尾，直接拼接 /models；否则拼接 /v1/models
+    const baseUrl = config.baseURL.replace(/\/+$/, '');
+    const modelsUrl = /\/v1\/?$/.test(baseUrl) ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
 
     try {
       const response = await fetch(modelsUrl, {
