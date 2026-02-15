@@ -206,7 +206,7 @@ export function HooksSection() {
                     {saving ? '保存中...' : '保存钩子'}
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                   保存钩子配置
                 </TooltipContent>
               </Tooltip>
@@ -219,7 +219,7 @@ export function HooksSection() {
                     取消
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                   取消创建钩子
                 </TooltipContent>
               </Tooltip>
@@ -283,7 +283,7 @@ export function HooksSection() {
               {hooks.preToolUse.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium text-ink-900 flex items-center gap-2">
-                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
+                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-info-light text-ink-700 text-xs font-medium">
                       工具使用前
                     </span>
                     <span className="text-xs text-muted">Pre-Tool-Use</span>
@@ -313,7 +313,7 @@ export function HooksSection() {
                               </svg>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                             删除钩子
                           </TooltipContent>
                         </Tooltip>
@@ -357,7 +357,7 @@ export function HooksSection() {
                               </svg>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                             删除钩子
                           </TooltipContent>
                         </Tooltip>
@@ -379,7 +379,7 @@ export function HooksSection() {
                   添加新钩子
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+              <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                 创建新的钩子配置
               </TooltipContent>
             </Tooltip>

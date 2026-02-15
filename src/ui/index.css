@@ -1,50 +1,160 @@
 @import "tailwindcss";
-@import "highlight.js/styles/github.css";
+@import "highlight.js/styles/github.css" (prefers-color-scheme: light);
+@import "highlight.js/styles/github-dark.css" (prefers-color-scheme: dark);
 
-@theme {
+/* ==================== 亮色主题变量（默认） ==================== */
+:root {
   /* Surface colors */
-  --color-surface: #FFFFFF;
-  --color-surface-secondary: #F5F4F1;
-  --color-surface-tertiary: #EFEEE9;
-  --color-surface-cream: #FAF9F6;
-  
+  --surface: #FFFFFF;
+  --surface-secondary: #F5F4F1;
+  --surface-tertiary: #EFEEE9;
+  --surface-cream: #FAF9F6;
+
   /* Ink colors */
-  --color-ink-900: #1A1915;
-  --color-ink-800: #2D2D2A;
-  --color-ink-700: #4A4A45;
-  --color-ink-600: #666661;
-  --color-ink-500: #7A7A75;
-  --color-ink-400: #9B9B96;
-  
+  --ink-900: #1A1915;
+  --ink-800: #2D2D2A;
+  --ink-700: #4A4A45;
+  --ink-600: #666661;
+  --ink-500: #7A7A75;
+  --ink-400: #9B9B96;
+
   /* Muted colors */
-  --color-muted: #6B6B66;
-  --color-muted-light: #9B9B96;
-  
+  --muted: #6B6B66;
+  --muted-light: #9B9B96;
+
   /* Accent colors (Claude orange) */
-  --color-accent: #D97757;
-  --color-accent-hover: #CC785C;
-  --color-accent-light: #F5D0C5;
-  --color-accent-subtle: #FDF4F1;
-  
+  --accent: #D97757;
+  --accent-hover: #CC785C;
+  --accent-light: #F5D0C5;
+  --accent-subtle: #FDF4F1;
+
   /* Status colors */
-  --color-error: #DC2626;
-  --color-error-light: #FEE2E2;
-  --color-success: #16A34A;
-  --color-success-light: #DCFCE7;
-  --color-info: #2563EB;
-  --color-info-light: #DBEAFE;
-  
+  --error: #DC2626;
+  --error-light: #FEE2E2;
+  --success: #16A34A;
+  --success-light: #DCFCE7;
+  --info: #2563EB;
+  --info-light: #DBEAFE;
+
   /* Background colors */
-  --color-bg-000: #FFFFFF;
-  --color-bg-100: #FAF9F6;
-  --color-bg-200: #F5F4F1;
-  --color-bg-300: #EFEEE9;
-  --color-bg-400: #E5E4DF;
-  
+  --bg-000: #FFFFFF;
+  --bg-100: #FAF9F6;
+  --bg-200: #F5F4F1;
+  --bg-300: #EFEEE9;
+  --bg-400: #E5E4DF;
+
+  /* Tooltip - 始终保持深色背景 */
+  --tooltip-bg: #1A1915;
+  --tooltip-fg: #F5F4F1;
+
   /* Shadows */
-  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-soft-val: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-card-val: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-elevated-val: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* ==================== 暗色主题变量 ==================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Surface colors - 暖灰深色系 */
+    --surface: #1A1915;
+    --surface-secondary: #242320;
+    --surface-tertiary: #2D2C28;
+    --surface-cream: #1F1E1A;
+
+    /* Ink colors - 反转亮度，保持暖色调 */
+    --ink-900: #F5F4F1;
+    --ink-800: #E5E4DF;
+    --ink-700: #B8B7B2;
+    --ink-600: #8A8985;
+    --ink-500: #6E6D69;
+    --ink-400: #555450;
+
+    /* Muted colors */
+    --muted: #8A8985;
+    --muted-light: #6E6D69;
+
+    /* Accent colors - 暗色下稍微提亮橙色 */
+    --accent: #E08A6D;
+    --accent-hover: #D9977E;
+    --accent-light: #3D2A22;
+    --accent-subtle: #2A1F1A;
+
+    /* Status colors - 降低饱和度避免刺眼 */
+    --error: #F87171;
+    --error-light: #3B1515;
+    --success: #4ADE80;
+    --success-light: #0D2818;
+    --info: #60A5FA;
+    --info-light: #1A2744;
+
+    /* Background colors - 从深到浅的层次 */
+    --bg-000: #131210;
+    --bg-100: #1A1915;
+    --bg-200: #242320;
+    --bg-300: #2D2C28;
+    --bg-400: #373630;
+
+    /* Tooltip - 暗色下稍亮以区分层次 */
+    --tooltip-bg: #2D2C28;
+    --tooltip-fg: #F5F4F1;
+
+    /* Shadows - 暗色下加强阴影 */
+    --shadow-soft-val: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-card-val: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --shadow-elevated-val: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ==================== Tailwind v4 主题映射 ==================== */
+@theme inline {
+  /* Surface */
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-surface-cream: var(--surface-cream);
+
+  /* Ink */
+  --color-ink-900: var(--ink-900);
+  --color-ink-800: var(--ink-800);
+  --color-ink-700: var(--ink-700);
+  --color-ink-600: var(--ink-600);
+  --color-ink-500: var(--ink-500);
+  --color-ink-400: var(--ink-400);
+
+  /* Muted */
+  --color-muted: var(--muted);
+  --color-muted-light: var(--muted-light);
+
+  /* Accent */
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-light: var(--accent-light);
+  --color-accent-subtle: var(--accent-subtle);
+
+  /* Status */
+  --color-error: var(--error);
+  --color-error-light: var(--error-light);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-info: var(--info);
+  --color-info-light: var(--info-light);
+
+  /* Background */
+  --color-bg-000: var(--bg-000);
+  --color-bg-100: var(--bg-100);
+  --color-bg-200: var(--bg-200);
+  --color-bg-300: var(--bg-300);
+  --color-bg-400: var(--bg-400);
+
+  /* Tooltip */
+  --color-tooltip-bg: var(--tooltip-bg);
+  --color-tooltip-fg: var(--tooltip-fg);
+
+  /* Shadows */
+  --shadow-soft: var(--shadow-soft-val);
+  --shadow-card: var(--shadow-card-val);
+  --shadow-elevated: var(--shadow-elevated-val);
 }
 
 pre code.hljs {
@@ -100,6 +210,15 @@ code, pre, textarea.mono, input.mono {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9B9B96;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: #4A4A45;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6E6D69;
+  }
 }
 
 /* Shimmer animation for partial message loading */

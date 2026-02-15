@@ -3,7 +3,7 @@
  * 组织和注册所有 IPC 通信处理器
  */
 
-import { ipcMain, dialog, shell } from "electron";
+import { ipcMain, dialog, shell, nativeTheme } from "electron";
 import path from "path";
 import { homedir } from "os";
 import { log } from "../logger.js";
@@ -134,6 +134,13 @@ import {
   setActiveApiConfig,
   validateApiConfig,
 } from "../storage/config-store.js";
+
+// 导入主题存储函数
+import {
+  loadThemePreference,
+  saveThemePreference,
+} from "../storage/theme-store.js";
+import type { ThemePreference } from "../storage/theme-store.js";
 
 // 导入 API 适配器工具函数
 import {
@@ -697,6 +704,30 @@ function registerMemoryHandlers(): void {
   ipcMain.handle("memory-search-entries", (_: unknown, params: any) => searchMemoryEntries(params));
 }
 
+// ==================== 主题处理器 ====================
+
+/**
+ * 注册主题相关 IPC 处理器
+ */
+function registerThemeHandlers(): void {
+    ipcMain.handle("get-theme", () => {
+        return loadThemePreference();
+    });
+
+    ipcMain.handle("set-theme", (_: unknown, theme: string) => {
+        const validThemes: ThemePreference[] = ["system", "dark", "light"];
+        if (!validThemes.includes(theme as ThemePreference)) {
+            log.warn(`[ipc-registry] Invalid theme value: ${theme}`);
+            return { success: false, error: "Invalid theme value" };
+        }
+        const themeValue = theme as ThemePreference;
+        saveThemePreference(themeValue);
+        nativeTheme.themeSource = themeValue;
+        log.info(`[ipc-registry] Theme changed to: ${themeValue}`);
+        return { success: true };
+    });
+}
+
 // ==================== 主注册函数 ====================
 
 /**
@@ -716,6 +747,7 @@ export function registerIpcHandlers(): void {
     registerMcpHandlers();
     registerMemoryHandlers();
     registerJarvisHandlers();
+    registerThemeHandlers();
 
     // 启动资源轮询
     const mainWindow = getMainWindow();

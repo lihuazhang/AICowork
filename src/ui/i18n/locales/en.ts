@@ -107,6 +107,12 @@ export default {
 	display: {
 		title: "Display Settings",
 		description: "Configure session message display options",
+		theme: {
+			title: "Appearance",
+			light: "Light",
+			dark: "Dark",
+			system: "System",
+		},
 		tokenUsage: {
 			title: "Show Token Usage Info",
 			description: "Display token usage, duration and cost information at the end of session",

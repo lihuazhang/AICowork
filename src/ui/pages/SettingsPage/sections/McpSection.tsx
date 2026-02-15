@@ -337,7 +337,7 @@ export function McpSection() {
         <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm z-50" />
-            <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-2xl max-h-[80vh] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl z-50 overflow-y-auto">
+            <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-2xl max-h-[80vh] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-surface p-6 shadow-xl z-50 overflow-y-auto">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <Dialog.Title className="text-lg font-semibold text-ink-900">
                   MCP 服务器测试结果
@@ -488,7 +488,7 @@ export function McpSection() {
                               />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                             {server.config.enabled !== false ? t('mcp.status.enabled') : t('mcp.status.disabled')}
                           </TooltipContent>
                         </Tooltip>
@@ -505,7 +505,7 @@ export function McpSection() {
                               </svg>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                             {t('mcp.actions.edit')}
                           </TooltipContent>
                         </Tooltip>
@@ -524,7 +524,7 @@ export function McpSection() {
                               )}
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                             测试连接
                           </TooltipContent>
                         </Tooltip>
@@ -538,7 +538,7 @@ export function McpSection() {
                               <X className="w-4 h-4" strokeWidth={2} />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                             删除服务器
                           </TooltipContent>
                         </Tooltip>
@@ -618,7 +618,7 @@ export function McpSection() {
                     <X className="w-5 h-5" strokeWidth={2} />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                   取消操作
                 </TooltipContent>
               </Tooltip>

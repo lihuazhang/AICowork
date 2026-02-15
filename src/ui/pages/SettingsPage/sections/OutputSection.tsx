@@ -274,7 +274,7 @@ export function OutputSection() {
                 {saving ? '保存中...' : '保存配置'}
               </button>
             </TooltipTrigger>
-            <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+            <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
               {saving ? '保存中...' : '保存输出样式配置'}
             </TooltipContent>
           </Tooltip>
@@ -288,7 +288,7 @@ export function OutputSection() {
                 重置为默认
               </button>
             </TooltipTrigger>
-            <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+            <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
               将所有配置重置为默认值
             </TooltipContent>
           </Tooltip>

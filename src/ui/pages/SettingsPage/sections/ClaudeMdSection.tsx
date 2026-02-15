@@ -208,7 +208,7 @@ export function ClaudeMdSection() {
                     编辑
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                   开始编辑Claude.md配置文件
                 </TooltipContent>
               </Tooltip>
@@ -222,7 +222,7 @@ export function ClaudeMdSection() {
                   {showTemplate ? '关闭模板' : '使用模板'}
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+              <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                 {showTemplate ? '关闭模板选择' : '选择模板创建配置'}
               </TooltipContent>
             </Tooltip>
@@ -236,7 +236,7 @@ export function ClaudeMdSection() {
                     删除
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                   删除Claude.md配置文件
                 </TooltipContent>
               </Tooltip>
@@ -259,7 +259,7 @@ export function ClaudeMdSection() {
                       <p className="text-xs text-muted mt-1">{template.description}</p>
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                  <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                     使用{template.name}模板创建配置
                   </TooltipContent>
                 </Tooltip>
@@ -298,7 +298,7 @@ export function ClaudeMdSection() {
                             {saving ? '保存中...' : '保存'}
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                        <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                           {saving ? '保存中...' : '保存Claude.md配置'}
                         </TooltipContent>
                       </Tooltip>
@@ -314,7 +314,7 @@ export function ClaudeMdSection() {
                             取消
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                        <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                           取消编辑，恢复原始内容
                         </TooltipContent>
                       </Tooltip>
@@ -327,7 +327,7 @@ export function ClaudeMdSection() {
                             重置
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                        <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                           重置为默认模板
                         </TooltipContent>
                       </Tooltip>
@@ -430,7 +430,7 @@ export function ClaudeMdSection() {
                     📂 打开配置目录
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                   打开Claude配置文件所在目录
                 </TooltipContent>
               </Tooltip>
@@ -446,7 +446,7 @@ export function ClaudeMdSection() {
                     📋 加载基础模板
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                   加载基础配置模板到编辑器
                 </TooltipContent>
               </Tooltip>

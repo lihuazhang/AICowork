@@ -296,7 +296,7 @@ export function MemorySection() {
                           <Pencil className="w-4 h-4" strokeWidth={2} />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                      <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                         {t('memory.kinds.edit')}
                       </TooltipContent>
                     </Tooltip>
@@ -310,7 +310,7 @@ export function MemorySection() {
                           <Trash2 className="w-4 h-4" strokeWidth={2} />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                      <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                         {t('memory.kinds.delete')}
                       </TooltipContent>
                     </Tooltip>
@@ -446,7 +446,7 @@ export function MemorySection() {
                             <Pencil className="w-4 h-4" strokeWidth={2} />
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                        <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                           {t('memory.kinds.edit')}
                         </TooltipContent>
                       </Tooltip>
@@ -460,7 +460,7 @@ export function MemorySection() {
                             <Trash2 className="w-4 h-4" strokeWidth={2} />
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                        <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                           {t('memory.actions.delete')}
                         </TooltipContent>
                       </Tooltip>

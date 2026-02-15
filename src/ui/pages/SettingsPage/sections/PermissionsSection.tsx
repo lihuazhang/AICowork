@@ -215,7 +215,7 @@ export function PermissionsSection() {
 										{saving ? '保存中...' : '保存规则'}
 									</button>
 								</TooltipTrigger>
-								<TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+								<TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
 									{saving ? '保存中...' : '保存权限规则'}
 								</TooltipContent>
 							</Tooltip>
@@ -228,7 +228,7 @@ export function PermissionsSection() {
 										取消
 									</button>
 								</TooltipTrigger>
-								<TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+								<TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
 									取消创建权限规则
 								</TooltipContent>
 							</Tooltip>
@@ -320,7 +320,7 @@ export function PermissionsSection() {
 													</svg>
 												</button>
 											</TooltipTrigger>
-											<TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+											<TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
 												删除权限规则
 											</TooltipContent>
 										</Tooltip>
@@ -340,7 +340,7 @@ export function PermissionsSection() {
 									添加权限规则
 								</button>
 							</TooltipTrigger>
-							<TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+							<TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
 								创建新的权限规则
 							</TooltipContent>
 						</Tooltip>

@@ -734,7 +734,7 @@ export function ApiSection() {
                           )}
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                      <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                         <p>{t("api.model.refresh")}</p>
                       </TooltipContent>
                     </Tooltip>
@@ -748,7 +748,7 @@ export function ApiSection() {
                           {testing ? t("api.actions.testing") : t("api.actions.test")}
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                      <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                         <p>{t("api.actions.test")}</p>
                       </TooltipContent>
                     </Tooltip>
@@ -891,7 +891,7 @@ export function ApiSection() {
                       {saving ? t("api.actions.saving") : t("api.actions.save")}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                  <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                     <p>{t("api.actions.save")}</p>
                   </TooltipContent>
                 </Tooltip>
@@ -985,7 +985,7 @@ export function ApiSection() {
                               </svg>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                             <p>{t("api.actions.test")}</p>
                           </TooltipContent>
                         </Tooltip>
@@ -1006,7 +1006,7 @@ export function ApiSection() {
                               </svg>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                             <p>{t("api.actions.setActive", "设为当前")}</p>
                           </TooltipContent>
                         </Tooltip>
@@ -1019,12 +1019,12 @@ export function ApiSection() {
                               onClick={() => handleEditConfig(config)}
                             >
                               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-5.5 5.5" />
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                               </svg>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                             <p>{t("api.actions.edit")}</p>
                           </TooltipContent>
                         </Tooltip>
@@ -1041,7 +1041,7 @@ export function ApiSection() {
                               </svg>
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                             <p>{t("api.actions.delete")}</p>
                           </TooltipContent>
                         </Tooltip>

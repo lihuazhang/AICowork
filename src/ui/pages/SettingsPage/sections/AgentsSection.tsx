@@ -541,7 +541,7 @@ export function AgentsSection() {
                               移除
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                             <p>从序列中移除此Agent</p>
                           </TooltipContent>
                         </Tooltip>
@@ -573,7 +573,7 @@ export function AgentsSection() {
                       {agent.name}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                  <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                     <p>将{agent.name}添加到序列</p>
                   </TooltipContent>
                 </Tooltip>
@@ -597,7 +597,7 @@ export function AgentsSection() {
                       {agent.name}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                  <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                     <p>将{agent.name}添加到序列</p>
                   </TooltipContent>
                 </Tooltip>
@@ -776,7 +776,7 @@ export function AgentsSection() {
                               编辑
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                             <p>编辑此自定义Agent</p>
                           </TooltipContent>
                         </Tooltip>
@@ -789,7 +789,7 @@ export function AgentsSection() {
                               删除
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg">
+                          <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-md shadow-lg">
                             <p>删除此自定义Agent</p>
                           </TooltipContent>
                         </Tooltip>
