@@ -3,7 +3,7 @@
  * 负责应用初始化和模块协调
  */
 
-import { app, Menu, shell } from "electron";
+import { app, Menu, shell, nativeTheme } from "electron";
 import { log, logStartup, setupErrorHandling } from "./logger.js";
 import { setupLifecycleEventHandlers } from "./main/lifecycle.js";
 import { createMainWindow } from "./main/window-manager.js";
@@ -12,6 +12,9 @@ import "./services/claude-settings.js";
 
 // 导入应用服务初始化器
 import { initializeAppServices } from "./main/app-initializer.js";
+
+// 导入主题偏好
+import { loadThemePreference } from "./storage/theme-store.js";
 
 /**
  * 设置应用菜单（保留基本功能）
@@ -74,16 +77,21 @@ app.on("ready", async () => {
         log.error('[App] Failed to initialize services:', error);
     });
 
-    // 4. 设置应用菜单（保留基本功能）
+    // 4. 应用主题偏好（在创建窗口前设置，确保窗口创建时已是正确主题）
+    const themePreference = loadThemePreference();
+    nativeTheme.themeSource = themePreference;
+    log.info(`[App] Theme preference applied: ${themePreference}`);
+
+    // 5. 设置应用菜单（保留基本功能）
     setupApplicationMenu();
 
-    // 5. 设置生命周期事件监听器
+    // 6. 设置生命周期事件监听器
     setupLifecycleEventHandlers();
 
-    // 6. 创建主窗口（等待 Vite 服务器准备好）
+    // 7. 创建主窗口（等待 Vite 服务器准备好）
     await createMainWindow();
 
-    // 7. 注册所有 IPC 处理器
+    // 8. 注册所有 IPC 处理器
     registerIpcHandlers();
 });
 

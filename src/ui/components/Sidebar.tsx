@@ -102,7 +102,7 @@ export function Sidebar({
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 flex h-full w-[280px] flex-col gap-4 border-r border-ink-900/5 bg-[#FAF9F6] px-4 pb-4 pt-12">
+    <aside className="fixed inset-y-0 left-0 flex h-full w-[280px] flex-col gap-4 border-r border-ink-900/5 bg-surface-cream px-4 pb-4 pt-12">
       {/* Electron 窗口拖拽区域 - 顶层 z-index 确保可点击，macOS 需为交通灯留出 no-drag 区域 */}
       <div
         className="absolute top-0 left-0 right-0 h-12 z-20"
@@ -126,7 +126,7 @@ export function Sidebar({
                 {t("sidebar.newTask")}
               </button>
             </TooltipTrigger>
-            <TooltipContent className="bg-ink-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg">
+            <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-3 py-1.5 rounded-lg shadow-lg">
               {t("sidebar.tooltips.newTask")}
             </TooltipContent>
           </Tooltip>
@@ -169,7 +169,7 @@ export function Sidebar({
                   </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                  <DropdownMenu.Content className="z-50 min-w-[220px] rounded-xl border border-ink-900/10 bg-white p-1 shadow-lg" align="center" sideOffset={8}>
+                  <DropdownMenu.Content className="z-50 min-w-[220px] rounded-xl border border-ink-900/10 bg-surface p-1 shadow-lg" align="center" sideOffset={8}>
                     <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-700 outline-none hover:bg-ink-900/5" onSelect={() => handleStartRename(session.id)}>
                       <svg viewBox="0 0 24 24" className="h-4 w-4 text-ink-500" fill="none" stroke="currentColor" strokeWidth="1.8">
                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
@@ -198,7 +198,7 @@ export function Sidebar({
       <Dialog.Root open={!!resumeSessionId} onOpenChange={(open) => !open && setResumeSessionId(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl">
+          <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-surface p-6 shadow-xl">
             <div className="flex items-start justify-between gap-4">
               <Dialog.Title className="text-lg font-semibold text-ink-800">{t("sidebar.resume")}</Dialog.Title>
               <Dialog.Close asChild>
@@ -225,7 +225,7 @@ export function Sidebar({
       <Dialog.Root open={!!renamingSessionId} onOpenChange={(open) => !open && handleRenameCancel()}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl">
+          <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-surface p-6 shadow-xl">
             <Dialog.Title className="text-lg font-semibold text-ink-800">重命名会话</Dialog.Title>
             <div className="mt-4">
               <label className="block text-sm font-medium text-ink-700 mb-2">会话名称</label>

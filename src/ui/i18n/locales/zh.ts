@@ -106,6 +106,12 @@ export default {
 	display: {
 		title: "显示设置",
 		description: "配置会话消息的显示选项",
+		theme: {
+			title: "外观主题",
+			light: "亮色",
+			dark: "暗色",
+			system: "跟随系统",
+		},
 		tokenUsage: {
 			title: "显示 Token 耗时信息",
 			description: "在会话结束时显示 Token 使用量、耗时和费用信息",

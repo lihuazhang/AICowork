@@ -184,9 +184,9 @@ export function SkillsSection() {
       </div>
 
       {/* 说明文档 */}
-      <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
-        <h4 className="font-semibold text-blue-900 mb-2">💡 使用说明</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="p-4 rounded-xl bg-info-light border border-info/20">
+        <h4 className="font-semibold text-ink-900 mb-2">💡 使用说明</h4>
+        <ul className="text-sm text-ink-700 space-y-1">
           <li>• 技能目录必须包含 SKILL.md 文件</li>
           <li>• SDK 会自动扫描 ~/.qwen/skills/ 目录并加载所有技能</li>
           <li>• 技能可以通过 Agent 配置的 skills 数组引用</li>

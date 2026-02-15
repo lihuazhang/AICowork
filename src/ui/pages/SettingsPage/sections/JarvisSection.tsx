@@ -276,14 +276,14 @@ export function JarvisSection() {
         ) : (
           <div className="space-y-4">
             {/* 预览信息 */}
-            <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-2">
+            <div className="p-4 rounded-xl bg-info-light border border-info/20">
+              <h4 className="font-semibold text-ink-900 mb-2">
                 {previewConfig.jarvis.name}
               </h4>
-              <p className="text-sm text-blue-800 mb-3">
+              <p className="text-sm text-ink-700 mb-3">
                 {previewConfig.jarvis.description}
               </p>
-              <div className="grid grid-cols-2 gap-2 text-sm text-blue-700">
+              <div className="grid grid-cols-2 gap-2 text-sm text-ink-600">
                 <div>📦 MCP 服务器: {previewConfig.statistics.mcpServersCount}</div>
                 <div>⚡ Skills: {previewConfig.statistics.skillsCount}</div>
                 <div>👤 作者: {previewConfig.jarvis.author}</div>
@@ -291,16 +291,16 @@ export function JarvisSection() {
               </div>
               
               {/* 显示包含的内容 */}
-              <div className="mt-4 pt-4 border-t border-blue-300">
+              <div className="mt-4 pt-4 border-t border-info/20">
                 <details className="text-sm">
-                  <summary className="cursor-pointer font-medium text-blue-900 hover:text-blue-700">
+                  <summary className="cursor-pointer font-medium text-ink-900 hover:text-ink-700">
                     查看详细内容
                   </summary>
                   <div className="mt-2 space-y-2">
                     {Object.keys(previewConfig.mcpServers).length > 0 && (
                       <div>
-                        <p className="font-medium text-blue-900">MCP 服务器：</p>
-                        <ul className="list-disc list-inside text-blue-700 ml-2">
+                        <p className="font-medium text-ink-900">MCP 服务器：</p>
+                        <ul className="list-disc list-inside text-ink-600 ml-2">
                           {Object.entries(previewConfig.mcpServers).map(([name, config]) => (
                             <li key={name}>
                               {name} {config.description && `- ${config.description}`}
@@ -312,8 +312,8 @@ export function JarvisSection() {
                     
                     {previewConfig.skills.length > 0 && (
                       <div>
-                        <p className="font-medium text-blue-900">Skills：</p>
-                        <ul className="list-disc list-inside text-blue-700 ml-2">
+                        <p className="font-medium text-ink-900">Skills：</p>
+                        <ul className="list-disc list-inside text-ink-600 ml-2">
                           {previewConfig.skills.map((skill) => (
                             <li key={skill}>{skill}</li>
                           ))}
@@ -349,9 +349,9 @@ export function JarvisSection() {
       </div>
       
       {/* 说明文档 */}
-      <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
-        <h4 className="font-semibold text-blue-900 mb-2">💡 使用说明</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="p-4 rounded-xl bg-info-light border border-info/20">
+        <h4 className="font-semibold text-ink-900 mb-2">💡 使用说明</h4>
+        <ul className="text-sm text-ink-700 space-y-1">
           <li>• 导出的 .jarvis 文件包含当前所有的 MCP 服务器配置和 Skills</li>
           <li>• 敏感信息（如 API Token）会被标记为需要导入时填写</li>
           <li>• 导入时会自动跳过已存在的同名配置，避免覆盖</li>

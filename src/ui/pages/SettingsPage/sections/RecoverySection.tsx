@@ -193,7 +193,7 @@ export function RecoverySection() {
 							{loading ? t("recovery.loading") || "加载中..." : t("recovery.refresh") || "刷新列表"}
 						</button>
 					</TooltipTrigger>
-					<TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+					<TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
 						{loading ? "加载中..." : "刷新会话列表"}
 					</TooltipContent>
 				</Tooltip>
@@ -267,7 +267,7 @@ export function RecoverySection() {
 														{recovering === session.sessionId ? "恢复中..." : t("recovery.recover")}
 													</button>
 												</TooltipTrigger>
-												<TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+												<TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
 													{recovering === session.sessionId ? "恢复中..." : "恢复此会话"}
 												</TooltipContent>
 											</Tooltip>
@@ -282,7 +282,7 @@ export function RecoverySection() {
 														</svg>
 													</button>
 												</TooltipTrigger>
-												<TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+												<TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
 													删除会话
 												</TooltipContent>
 											</Tooltip>

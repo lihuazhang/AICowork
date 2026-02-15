@@ -218,7 +218,7 @@ export function RulesSection() {
                 + 新建
               </button>
             </TooltipTrigger>
-            <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+            <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
               创建新的规则文件
             </TooltipContent>
           </Tooltip>
@@ -239,7 +239,7 @@ export function RulesSection() {
                       {template.name}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                  <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                     {template.description}
                   </TooltipContent>
                 </Tooltip>
@@ -294,7 +294,7 @@ export function RulesSection() {
                           </svg>
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                      <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                         删除规则文件
                       </TooltipContent>
                     </Tooltip>
@@ -331,7 +331,7 @@ export function RulesSection() {
                             编辑
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                        <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                           开始编辑规则文件
                         </TooltipContent>
                       </Tooltip>
@@ -349,7 +349,7 @@ export function RulesSection() {
                             {saving ? '保存中...' : '保存'}
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                        <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                           {saving ? '保存中...' : '保存规则文件'}
                         </TooltipContent>
                       </Tooltip>
@@ -366,7 +366,7 @@ export function RulesSection() {
                             取消
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-ink-900 text-white text-xs px-2 py-1 rounded-md">
+                        <TooltipContent className="bg-tooltip-bg text-tooltip-fg text-xs px-2 py-1 rounded-md">
                           取消编辑，恢复原始内容
                         </TooltipContent>
                       </Tooltip>
